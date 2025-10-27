@@ -1,0 +1,121 @@
+<html><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Stitch Design - Enhanced Bid Overlay</title>
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Poppins:wght@400;500;600;700;800;900&amp;family=Roboto:wght@400;500;700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style type="text/tailwindcss">
+          :root {
+            --pink-accent: #E91E63;
+            --purple-accent: #9C27B0;
+            --light-bg: #F8F7FA;
+          }
+          .animate-gradient-text {
+            background: linear-gradient(90deg, var(--purple-accent), var(--pink-accent), var(--purple-accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-animation 4s ease infinite;
+          }
+          @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .stat-icon {
+            background: linear-gradient(135deg, var(--purple-accent), var(--pink-accent));
+            color: white;
+          }
+        </style>
+    </head>
+    <body class="bg-transparent" style='font-family: "Poppins", "Roboto", sans-serif;'>
+    <div class="relative flex size-full min-h-screen flex-col items-center justify-center p-4">
+    <div class="w-full max-w-2xl">
+    <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border-2 border-white">
+    <div class="grid grid-cols-3">
+    <div class="col-span-1 bg-[var(--light-bg)] p-6 flex flex-col items-center justify-center relative">
+    <div class="absolute top-4 left-4">
+    <img alt="UCL Logo" class="h-16" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqlP_RW_22dmA4P9wNp9S4Siw2f4pKtXsy3UNUp-tAc6ohh3MTVDgT8vHh1dwQASPdJX0K2G1w3VeJLIkgWtGl0o1-d84irrjhP-KgQdrO_4GzM-feOwrlGZHofHJOxLqnouCY34k7M5zzhjf_zPZ_-ZyqC_G35Q8yzM0g1v-3NZT20A7J_fHQy7XDx-8EfNI8FfdlewVXEAcCvxI1_vSoXzwsq9NKYggM765fVc2Byny_btxnble9KZ9XYZg-cFbtmpI9Pfp3jMk"/>
+    </div>
+    <div class="relative mt-20">
+    <div class="w-40 h-40 rounded-full bg-gradient-to-br from-[var(--pink-accent)] to-[var(--purple-accent)] p-1.5 shadow-lg">
+    <img alt="Player Photo" class="w-full h-full rounded-full object-cover border-4 border-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuPV8X92gjwEKtspBzzx2Yp8267b79-TtR0l79Awk5X4txxa_Y997ArE-nSDgNDXhkJ3G15fCPuVxBnR51DW_euGbz6QCePcJ6HEWZhAKWfB8pS7USttJdKGoAFq-v0XqZTwxcqh6THrXJZUtfkHuELaVPGmHcC2Fr4wwBUSxnusaLFiwswrjrL3I2yUCsfwz9EZt5HBoqozwJ_-xVJ2-2w_PTCXcB7LMySunshHH71uslJV7R32DaXMQbCOishUUWEWoJzBugb8s"/>
+    </div>
+    <span class="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-md">
+    <span class="material-symbols-outlined text-[var(--purple-accent)] text-4xl">sports_soccer</span>
+    </span>
+    </div>
+    <h2 class="mt-4 text-4xl font-extrabold text-gray-800 tracking-tight">Jamie Cook</h2>
+    <p class="text-xl font-semibold text-[var(--pink-accent)] mt-1">Striker</p>
+    </div>
+    <div class="col-span-2 p-6 flex flex-col justify-between">
+    <div>
+    <div class="flex justify-between items-start mb-6">
+    <div>
+    <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Currently Bidding</p>
+    <div class="flex items-center gap-2 mt-1">
+    <span class="material-symbols-outlined text-[var(--purple-accent)] text-4xl animate-pulse">gavel</span>
+    <p class="text-lg font-medium text-gray-700">Awaiting Next Bid</p>
+    </div>
+    </div>
+    <div class="text-right">
+    <p class="text-sm font-bold text-gray-500 uppercase tracking-wider">Highest Bid</p>
+    <p class="text-5xl font-black animate-gradient-text">$4,500</p>
+    <p class="text-xl font-bold text-[var(--purple-accent)]">by Team Beta</p>
+    </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mt-6">
+    <div class="bg-gray-50 rounded-lg p-3">
+    <h4 class="font-bold text-gray-600 text-sm mb-2">Player Info</h4>
+    <div class="flex items-center space-x-3 mb-2">
+    <span class="material-symbols-outlined text-lg text-gray-500">cake</span>
+    <p class="text-gray-800 font-medium">Age: 28</p>
+    </div>
+    <div class="flex items-center space-x-3">
+    <span class="material-symbols-outlined text-lg text-gray-500">height</span>
+    <p class="text-gray-800 font-medium">Height: 6'1"</p>
+    </div>
+    </div>
+    <div class="bg-gray-50 rounded-lg p-3">
+    <h4 class="font-bold text-gray-600 text-sm mb-2">Previous Club</h4>
+    <div class="flex items-center space-x-3">
+    <span class="material-symbols-outlined text-lg text-gray-500">shield</span>
+    <p class="text-gray-800 font-medium">FC Dynamo</p>
+    </div>
+    </div>
+    </div>
+    <div class="mt-6">
+    <h4 class="font-bold text-gray-600 text-sm mb-3 text-center uppercase tracking-wider">Season Statistics</h4>
+    <div class="grid grid-cols-3 gap-4 text-center">
+    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+    <div class="stat-icon w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+    <span class="material-symbols-outlined">directions_run</span>
+    </div>
+    <p class="text-2xl font-bold text-gray-800">24</p>
+    <p class="text-xs text-gray-500">Games</p>
+    </div>
+    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+    <div class="stat-icon w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+    <span class="material-symbols-outlined">sports_soccer</span>
+    </div>
+    <p class="text-2xl font-bold text-gray-800">18</p>
+    <p class="text-xs text-gray-500">Goals</p>
+    </div>
+    <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+    <div class="stat-icon w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+    <span class="material-symbols-outlined">assistant</span>
+    </div>
+    <p class="text-2xl font-bold text-gray-800">12</p>
+    <p class="text-xs text-gray-500">Assists</p>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </body></html>

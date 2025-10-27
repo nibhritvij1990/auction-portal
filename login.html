@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<title>Auction Hub Login</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+      :root {
+        --primary-pink: #f72585;
+        --primary-purple: #7209b7;
+      }
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      .bg-auction {
+        background-image: url('https://storage.googleapis.com/aida-images/ce8122d2-8b43-4e8c-8515-3b95a828e833.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+    </style>
+</head>
+<body class="bg-gray-50">
+<div class="flex min-h-screen flex-col items-center justify-center bg-auction">
+<div class="w-full max-w-md rounded-2xl bg-white/80 p-8 shadow-lg backdrop-blur-sm">
+<div class="mb-8 text-center">
+<img alt="UCL Logo" class="mx-auto mb-4 h-16" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT-26wHxX2E9Njekhl_4J6LafKa_VaapbS-gTxGnrp0jd4yDdGNCHJTu53WwH3gsjWWt67l9QKRZnXQ8ikVFsikJMV_o-_MXeeFcxTsTtWTx-UDGOt_-_fFwXTqibS5cndghuJrnqeAh_uFSHEpwX22UEIZAY_qFwGY6wiBmM-X60Rmdr2GjsXwCUHhofdNPQEngIno9saOzR3dXozTDHzvoNaFrhLoiNFLGOrJYbWCrua7NbGZYU_BGOF199NlPvJKmGcNgAH0qo"/>
+<h1 class="text-3xl font-bold text-gray-900">Auction Hub</h1>
+<p class="mt-2 text-gray-600">Sponsored by UCL</p>
+</div>
+<form>
+<div class="space-y-6">
+<div>
+<label class="sr-only" for="email">Username or Email</label>
+<input class="w-full rounded-lg border-gray-300 bg-white/70 px-4 py-3 text-gray-800 transition-all duration-300 ease-in-out focus:border-[var(--primary-pink)] focus:ring-2 focus:ring-[var(--primary-pink)]/50" id="email" name="email" placeholder="Username or Email" required="" type="email"/>
+</div>
+<div>
+<label class="sr-only" for="password">Password</label>
+<input class="w-full rounded-lg border-gray-300 bg-white/70 px-4 py-3 text-gray-800 transition-all duration-300 ease-in-out focus:border-[var(--primary-pink)] focus:ring-2 focus:ring-[var(--primary-pink)]/50" id="password" name="password" placeholder="Password" required="" type="password"/>
+</div>
+</div>
+<div class="mt-8 flex flex-col gap-4">
+<button class="w-full rounded-lg bg-[var(--primary-pink)] py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary-pink)] focus:ring-offset-2" type="submit">
+              Login
+            </button>
+<button class="w-full rounded-lg bg-[var(--primary-purple)] py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary-purple)] focus:ring-offset-2" type="button">
+              Sign Up
+            </button>
+</div>
+</form>
+<div class="mt-6 text-center">
+<a class="text-sm text-gray-500 hover:text-[var(--primary-pink)] hover:underline" href="#"> Forgot password? </a>
+</div>
+</div>
+</div>
+
+</body></html>

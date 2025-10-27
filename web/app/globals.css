@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ucl-pink: #e83e8c;
+  --ucl-purple: #6f42c1;
+}
+
+html, body {
+  height: 100%;
+}
+
+.ms-16 { font-size: 16px !important; line-height: 16px !important; } 

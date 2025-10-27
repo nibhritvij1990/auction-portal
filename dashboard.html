@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<title>UCL Auction Central</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+    :root {
+      --ucl-pink: #E91E63;
+      --ucl-purple: #9C27B0;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+<div class="flex min-h-screen flex-col">
+<header class="flex items-center justify-between border-b border-gray-200 bg-white px-10 py-4 shadow-sm">
+<div class="flex items-center gap-4">
+<img alt="UCL Logo" class="h-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFJ-i2Vs-0PePE660yJ_15LcKtKWwB8kMGBQW1g05INDt3h6ParD3ApqqbB39tZr4xiS2OgKp2xPmoAEt5V_9IIo44jOTSKb0PFJLfXnF5DLHv8jMNy-QK1lOAT6JPDdmEzVLGVj_LEe6udU6izksbNGn5QcAa8jbyDGlmc4eq4KoSGk61blmYZ96oqrpRQUc8qwNZf4gpnJ5T0_6WUf-b9XADHbZKyyVfCX2U_FE0lwszFVboP5v7q1K6WPQjShXVTKP2mv82Z44"/>
+<h1 class="text-2xl font-bold text-gray-900 tracking-tight">Auction Central</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--ucl-pink)] focus:ring-offset-2">
+<span class="material-symbols-outlined">
+            notifications
+          </span>
+<span class="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-[var(--ucl-pink)] border-2 border-white"></span>
+</button>
+<div class="relative" x-data="{ open: false }">
+<button @click="open = !open" class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--ucl-pink)]" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCkBaw0NP9vVQvXoio8OnkXr77KrzC_fbJWwzi6VZ61DM6m8HxpCjULjESPM-3SbdaLrAnKnS97J7WiQSrjXhvCTAXTm-ST0lNXRE_J5P8ZNDHHCP4UY1A6lzcsePkOLoAwP7KbxEcFul1kEXgDzmQskgxqEuJz455sHU-GB9d_3QuK82DMeaba4QA4y2IU16b7v0E6VOSqCj06cnETsGUnXZsBq7vQMiP4EAKavjeHTnTPHuNnsaC20XheVKeBqgn64ClOY8sQVs0");'></button>
+<div @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-10" x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-end="transform opacity-100 scale-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:leave="transition ease-in duration-75" x-transition:leave-end="transform opacity-0 scale-95" x-transition:leave-start="transform opacity-100 scale-100">
+<div class="px-4 py-2">
+<p class="text-sm font-medium text-gray-900">John Doe</p>
+<p class="text-xs text-gray-500">Admin</p>
+</div>
+<a class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#">Logout</a>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 bg-gray-50 py-12">
+<div class="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-4xl font-bold tracking-tight text-gray-900">Auctions Dashboard</h2>
+<button class="flex items-center justify-center gap-2 rounded-full bg-[var(--ucl-pink)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ucl-pink)]">
+<span class="material-symbols-outlined">
+              add
+            </span>
+<span>Create New Auction</span>
+</button>
+</div>
+<div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-md">
+<table class="w-full min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Auction Name</th>
+<th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Status</th>
+<th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Date</th>
+<th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Teams</th>
+<th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Base Price</th>
+<th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Total Purse</th>
+<th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider" scope="col">Max Players/Team</th>
+<th class="relative px-6 py-4" scope="col">
+<span class="sr-only">Action</span>
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 bg-white">
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-500">emoji_events</span>
+</div>
+<span>Premier League Auction</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+<span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Active</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-07-15</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">20</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$50k</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$1M</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">15</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+<a class="text-[var(--ucl-purple)] hover:text-purple-800" href="#">Manage</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Summary</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Edit</a>
+<a class="text-red-500 hover:text-red-700" href="#">Delete</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-500">emoji_events</span>
+</div>
+<span>Champions League Auction</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+<span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">Completed</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-06-01</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">32</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$100k</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$3.2M</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">23</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+<a class="text-[var(--ucl-purple)] hover:text-purple-800" href="#">Manage</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Summary</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Edit</a>
+<a class="text-red-500 hover:text-red-700" href="#">Delete</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-500">sports_basketball</span>
+</div>
+<span>National Basketball League Auction</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+<span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">Upcoming</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-08-01</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">30</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$150k</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$4.5M</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">12</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+<a class="text-[var(--ucl-purple)] hover:text-purple-800" href="#">Manage</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Summary</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Edit</a>
+<a class="text-red-500 hover:text-red-700" href="#">Delete</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-500">sports_baseball</span>
+</div>
+<span>Major League Baseball Auction</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+<span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">Active</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-07-01</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">30</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$200k</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$6M</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">26</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+<a class="text-[var(--ucl-purple)] hover:text-purple-800" href="#">Manage</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Summary</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Edit</a>
+<a class="text-red-500 hover:text-red-700" href="#">Delete</a>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+<div class="flex items-center gap-3">
+<div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-500">sports_football</span>
+</div>
+<span>National Football League Auction</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+<span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">Completed</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-05-15</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">32</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$250k</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">$8M</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">53</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+<a class="text-[var(--ucl-purple)] hover:text-purple-800" href="#">Manage</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Summary</a>
+<a class="text-gray-500 hover:text-gray-700" href="#">Edit</a>
+<a class="text-red-500 hover:text-red-700" href="#">Delete</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<script defer="" src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
+
+</body></html>

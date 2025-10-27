@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+      :root {
+        --ucl-pink: #e83e8c;
+        --ucl-purple: #6f42c1;
+      }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<div class="flex min-h-screen flex-col" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+<div class="flex-grow">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 px-10 py-4">
+<div class="flex items-center gap-4 text-gray-800">
+<img alt="UCL Logo" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3VgJjZfh_TnzHwE6F2dwaNo9hxOhvaXDuHgQXdE7Cox473ZX6FqqSko_n5Xwn8bzZqU7S_yGQ9B08W3dd_FwCvX7iHQn74stI_tqKg6rG87MLMVCH5V1tNMNCh0hLStyjJwoLyS_jht5Elgibc34_hTfnJDYtSCVFBT3Bi9BXC8nQkMjeWz0CnJ6Jo8x1HG2mMK7e-U7MtUmnxcpfe4qaInr4C6EGJvcFddutnPvmkg3T7NJzbbCt_-gPMX1unchW69Ubnw-Kf00"/>
+<h1 class="text-xl font-bold">UCL Player Auction</h1>
+</div>
+<nav class="flex items-center gap-8">
+<a class="text-sm font-medium text-gray-600 hover:text-[var(--ucl-pink)]" href="#">Home</a>
+<a class="text-sm font-medium text-gray-600 hover:text-[var(--ucl-pink)]" href="#">Teams</a>
+<a class="text-sm font-medium text-gray-600 hover:text-[var(--ucl-pink)]" href="#">Players</a>
+<a class="text-sm font-medium text-gray-600 hover:text-[var(--ucl-pink)]" href="#">Rules</a>
+<a class="text-sm font-medium text-gray-600 hover:text-[var(--ucl-pink)]" href="#">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="flex cursor-pointer items-center justify-center rounded-full bg-gray-100 p-2 text-gray-600 hover:bg-gray-200">
+<span class="material-symbols-outlined"> notifications </span>
+</button>
+<div class="size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAjyINEZWiy3aHqQPPZJpMZAtO2rv7DRx3wczZrQmp5kRI3sgsnBeBsSB7-fE65G-JN0cncJPhiAd7eIyp8DmGXIOWQhxrzR7Wyq1acjBo0bP5A75O3tIQbwwhXYUDHzn2ZSB-F99rPIwpZBskRYS_bcc3N3yd_iJL_OtTDsTlw4ypAWXAE9JJwTYAXf4Wr2SZOYhTg91Fh3BOvWC5bR98YFyHs_V1st9K9SRy8DiBqvdeyg-gtBOT8iDQwkDqQ3hV8DV92KUkSD8o");'></div>
+</div>
+</header>
+<main class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="mb-8">
+<h1 class="text-4xl font-bold tracking-tight text-gray-900">Auction Summary</h1>
+<p class="mt-2 text-lg text-gray-500">Current state of the auction and team compositions.</p>
+</div>
+<section class="mb-8">
+<h2 class="mb-4 text-2xl font-bold text-gray-900">Current Auction</h2>
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<div class="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+<p class="text-sm font-medium text-gray-500">Current Player</p>
+<p class="text-3xl font-bold text-gray-900">Liam Carter</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+<p class="text-sm font-medium text-gray-500">Current Bid</p>
+<p class="text-3xl font-bold text-[var(--ucl-purple)]">$50,000</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+<p class="text-sm font-medium text-gray-500">Highest Bidder</p>
+<p class="text-3xl font-bold text-[var(--ucl-pink)]">Team B</p>
+</div>
+</div>
+</section>
+<section class="mb-8">
+<h2 class="mb-4 text-2xl font-bold text-gray-900">Team Purses</h2>
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Team</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Purse Available</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Purse Spent</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Acquired Players</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 bg-white">
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-gray-900">Team A</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-green-600">$100,000</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-red-600">$100,000</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">3</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-gray-900">Team B</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-green-600">$120,000</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-red-600">$80,000</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">2</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-bold text-gray-900">Team C</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-green-600">$80,000</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-red-600">$120,000</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">3</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="mb-8">
+<h2 class="mb-4 text-2xl font-bold text-gray-900">Team Compositions</h2>
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold text-gray-900">Team A</h3>
+<span class="text-sm font-medium text-gray-500">$100,000 left</span>
+</div>
+<div class="mt-4">
+<ul class="space-y-3">
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">Mason Lee</span>
+<span class="text-sm text-gray-500">Forward</span>
+</li>
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">Harper Wilson</span>
+<span class="text-sm text-gray-500">Goalkeeper</span>
+</li>
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">Charlotte Moore</span>
+<span class="text-sm text-gray-500">Midfielder</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold text-gray-900">Team B</h3>
+<span class="text-sm font-medium text-gray-500">$120,000 left</span>
+</div>
+<div class="mt-4">
+<ul class="space-y-3">
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">James Taylor</span>
+<span class="text-sm text-gray-500">Guard</span>
+</li>
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">Evelyn Anderson</span>
+<span class="text-sm text-gray-500">Pitcher</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold text-gray-900">Team C</h3>
+<span class="text-sm font-medium text-gray-500">$80,000 left</span>
+</div>
+<div class="mt-4">
+<ul class="space-y-3">
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">Benjamin Thomas</span>
+<span class="text-sm text-gray-500">Defenseman</span>
+</li>
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">Amelia Jackson</span>
+<span class="text-sm text-gray-500">Forward</span>
+</li>
+<li class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+<span class="font-medium text-gray-800">William White</span>
+<span class="text-sm text-gray-500">Midfielder</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="mb-4 text-2xl font-bold text-gray-900">Player Pool Status</h2>
+<div class="mb-4">
+<div class="border-b border-gray-200">
+<nav aria-label="Tabs" class="-mb-px flex space-x-8">
+<a aria-current="page" class="whitespace-nowrap border-b-2 border-[var(--ucl-pink)] px-1 py-4 text-sm font-medium text-[var(--ucl-pink)]" href="#"> Available </a>
+<a class="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700" href="#"> Sold </a>
+<a class="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700" href="#"> Unsold </a>
+</nav>
+</div>
+</div>
+<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Player</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Sport</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Position</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500" scope="col">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 bg-white">
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">Liam Carter</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Football</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Forward</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-green-600">Up for Auction</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">Ethan Bennett</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Basketball</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Guard</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Available</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">Noah Davis</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Baseball</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Pitcher</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Available</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">Oliver Evans</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Soccer</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Midfielder</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Available</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">Lucas Foster</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Hockey</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Defenseman</td>
+<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">Available</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</div>
+
+</body></html>

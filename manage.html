@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<title>Auction Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --primary-50: #f0f9ff;
+            --primary-100: #e0f2fe;
+            --primary-200: #bae6fd;
+            --primary-300: #7dd3fc;
+            --primary-400: #38bdf8;
+            --primary-500: #0ea5e9;
+            --primary-600: #0284c7;
+            --primary-700: #0369a1;
+            --primary-800: #075985;
+            --primary-900: #0c4a6e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-gray-50" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+<div class="flex min-h-screen">
+<aside class="w-64 bg-white p-6 flex flex-col justify-between border-r border-gray-200">
+<div>
+<div class="flex items-center gap-3 mb-10">
+<img class="h-10 w-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWU-2H6FwslxIhIhfbWsEQdZ8bwLOKHgijNEU17x0IWNICsXe1J51Q4gffIfO5mcoUIbaqoYlJN5pcT89H3z7KeSTjoqneJjNWqK0wUzZzgozUsNu8cxbNmhAMI4X2LP3DUwHKPSiAt76VoC7Cynjk0kco2XErKnpX2BgGpHzwPnDljd3UmwfcpLo0YBGK-cbD-zydipZsN575rRl2sxTqZaHVxvSRojK9JcrFV6tSjzDT4nnI28my-3wv4b5Qd8M6Q5kr9LhmJ3g"/>
+<div class="flex flex-col">
+<h1 class="text-gray-900 text-xl font-bold leading-tight">UCL Auctions</h1>
+<p class="text-sm text-gray-500">Sponsored</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2" id="main-nav">
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-pink-50 text-pink-600" href="#teams">
+<span class="material-symbols-outlined filled text-pink-600">groups</span>
+<span class="font-semibold">Teams</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100" href="#players">
+<span class="material-symbols-outlined">person</span>
+<span class="font-medium">Players</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100" href="#rules">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-medium">Bid Rules</span>
+</a>
+<hr class="my-4 border-gray-200"/>
+<a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100" href="[auction console page]">
+<span class="material-symbols-outlined">live_tv</span>
+<span class="font-medium">Live Auction Console</span>
+</a>
+</nav>
+</div>
+<div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+<img class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWU-2H6FwslxIhIhfbWsEQdZ8bwLOKHgijNEU17x0IWNICsXe1J51Q4gffIfO5mcoUIbaqoYlJN5pcT89H3z7KeSTjoqneJjNWqK0wUzZzgozUsNu8cxbNmhAMI4X2LP3DUwHKPSiAt76VoC7Cynjk0kco2XErKnpX2BgGpHzwPnDljd3UmwfcpLo0YBGK-cbD-zydipZsN575rRl2sxTqZaHVxvSRojK9JcrFV6tSjzDT4nnI28my-3wv4b5Qd8M6Q5kr9LhmJ3g"/>
+<div>
+<p class="font-semibold text-gray-900">Alex Thompson</p>
+<p class="text-sm text-gray-500">Auction Admin</p>
+</div>
+</div>
+</aside>
+<main class="flex-1 p-8">
+<div class="max-w-7xl mx-auto">
+<header class="mb-8">
+<h1 class="text-4xl font-bold text-gray-900">Auction Management Console</h1>
+<p class="text-gray-500 mt-2">Manage teams, players, and bid rules for your auction.</p>
+</header>
+<div class="space-y-12" id="teams-view">
+<div class="flex justify-between items-center">
+<h2 class="text-2xl font-bold text-gray-800">Teams</h2>
+<button class="bg-purple-600 text-white font-semibold py-2.5 px-5 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                            Add New Team
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+<img alt="FC Barcelona Logo" class="h-32 w-32 object-contain mb-6 mx-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUnwLVsweAvQh_sqnX90Hul5L_GyrqpXsMN6ufm02FxTD5jaQTFiDlZEXSNT3rlV0cQbHhW332Q6to3puxJ4KRMATlClVn3i4AxWCUBpslNyIHNbPMPQxPMzzEgoqqbRPcp0VbDrKDt0izm4ZabrX_NgkfpeGR-l7tqpY3o0VaIJQy-SPkcQymgQsyvO_R-JWxTTRox2xo8ZrzcJuMojOMEfuvR2o65Y6TIRlNq5cv9u1zYEZ9UDNieQHSqcmeqfv8GMqXODW0Srs"/>
+<h3 class="text-xl font-bold text-gray-900 text-center mb-2">FC Barcelona</h3>
+<div class="text-sm text-gray-500 space-y-2 mt-auto">
+<p><strong>Players:</strong> 18 / 22</p>
+<p><strong>Balance Purse:</strong> $32,500,000</p>
+</div>
+<div class="flex gap-2 mt-4">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"><span class="material-symbols-outlined text-base">edit</span>Edit</button>
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-medium"><span class="material-symbols-outlined text-base">delete</span>Delete</button>
+</div>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+<img alt="Real Madrid C.F. Logo" class="h-32 w-32 object-contain mb-6 mx-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeKCWkIw3JVETviN70B8fieMg2d2rjNwBbGlX8bZJw68mw6GKg6iGn0iESSzGFuDoL7-QVoBzfAqNVrIGxzh1V39C9jDoqxzJwthFBB9oqcvI5vC9p-D5mnaPjyVgZIM-V8d4mdi7mY9LHl5vZKm33j8Ibu60ROjioflNkSUiQOinUVrFH0-fdxl9-s0BId88PNIDPCdsLZVG5WRuCXRDtX6CcNDxvJJ-bQRDZyGbJYRNL1i9-5vpOS8BMrmfJs55MQK6gVIr0mas"/>
+<h3 class="text-xl font-bold text-gray-900 text-center mb-2">Real Madrid C.F.</h3>
+<div class="text-sm text-gray-500 space-y-2 mt-auto">
+<p><strong>Players:</strong> 20 / 22</p>
+<p><strong>Balance Purse:</strong> $15,000,000</p>
+</div>
+<div class="flex gap-2 mt-4">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"><span class="material-symbols-outlined text-base">edit</span>Edit</button>
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-medium"><span class="material-symbols-outlined text-base">delete</span>Delete</button>
+</div>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+<img alt="Manchester United Logo" class="h-32 w-32 object-contain mb-6 mx-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs0-aksjJIWHeVamEtLqWsLYLvZB6ruYFpqhyFMIrKeC2J9o1wm_wlsMw4SPqPgYbzTjTW6ugJGJESSnm1as4g3qWoFQAl6IzWb71s5uqlk8gNa-hBGqAMHrVW7fCuui5PilpuiVFqVsbLYoSM_knmrl35E_NUPsuRmCPvb2cEqLL2TtC1bHck3YiRTICxUMrIm7LyNbq9DW4kQZUBx9xoUZwmLI-uyDvgI17MSowOL_DkehMtwW_15S2lW6Wqws30dKGcMxgm2wo"/>
+<h3 class="text-xl font-bold text-gray-900 text-center mb-2">Manchester United</h3>
+<div class="text-sm text-gray-500 space-y-2 mt-auto">
+<p><strong>Players:</strong> 19 / 22</p>
+<p><strong>Balance Purse:</strong> $25,200,000</p>
+</div>
+<div class="flex gap-2 mt-4">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"><span class="material-symbols-outlined text-base">edit</span>Edit</button>
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-medium"><span class="material-symbols-outlined text-base">delete</span>Delete</button>
+</div>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+<img alt="Bayern Munchen Logo" class="h-32 w-32 object-contain mb-6 mx-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8MixqpZEI0cwnquRO_OMgD7YAWU5dxirvWG0xGOuQVZNuMur7xDp8iGpGpq15xzWzORBLW2Gb8DjWIWqKXiJDY0bx6JV5a6lLZbERIJGyUu9K8oGhUNd0-5i9nY-hCkZIJBYQsXzPIGcq8C4-qCLhxbDdVlb3HGDIFyb8HrU_zyGKD39zPb340AGPlQXrEfRxXpy1LmmWIv_rVpty9QSjvXVmwhqPYq4DVMz3KLRv8p6tnnuuQd4CkVvewnaJnFtT-lwHfu02_yg"/>
+<h3 class="text-xl font-bold text-gray-900 text-center mb-2">Bayern Munich</h3>
+<div class="text-sm text-gray-500 space-y-2 mt-auto">
+<p><strong>Players:</strong> 21 / 22</p>
+<p><strong>Balance Purse:</strong> $8,900,000</p>
+</div>
+<div class="flex gap-2 mt-4">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"><span class="material-symbols-outlined text-base">edit</span>Edit</button>
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-medium"><span class="material-symbols-outlined text-base">delete</span>Delete</button>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-8 hidden" id="players-view">
+<div class="flex justify-between items-center flex-wrap gap-4">
+<h2 class="text-2xl font-bold text-gray-800">Players</h2>
+<div class="flex gap-2 flex-wrap">
+<button class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-base">add</span>Add New Player</button>
+<button class="bg-gray-100 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-base">upload_file</span>Bulk Import</button>
+<button class="bg-gray-100 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-base">edit_document</span>Bulk Edit</button>
+<button class="bg-gray-100 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-base">download_file</span>Bulk Export</button>
+<button class="bg-pink-100 text-pink-700 font-semibold py-2 px-4 rounded-lg hover:bg-pink-200 transition-colors flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-base">published_with_changes</span>Mark All Unsold as Available</button>
+<button class="bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-base">delete_sweep</span>Delete All</button>
+</div>
+</div>
+<div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
+<table class="w-full min-w-[1000px]">
+<thead class="bg-gray-50 border-b border-gray-200">
+<tr>
+<th class="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Player</th>
+<th class="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Category</th>
+<th class="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Auction Set</th>
+<th class="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Base Price</th>
+<th class="p-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+<th class="p-4 text-right text-sm font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200">
+<tr>
+<td class="p-4">
+<div class="flex items-center gap-4">
+<img alt="Lionel Messi" class="h-12 w-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp3-eN2ZYyNajfuUwG4EeDqKbgSTN96-0yERTBjvJ7wEcsHisRQpTzMa6HUWKsasm-iJke2fhjml7ZjI0HoLHnIw2TkkVu7620AseQjUDNK0DXsaf9Lut3MCwI3aicNn8U_Ao1IP9RnojAQd-qcEZwz0HEEu0Zfuvw5KpxsV93E6pUDsSWaKVUY82sEarsxFtsGUzsuzLWhew4fVxbbttyBDhM57xPOLfJZ96XwVO5oRsSI2nIDxT73PeRgZvr5LDk0_rAEkJ-5GA"/>
+<div>
+<p class="font-semibold text-gray-900">Lionel Messi</p>
+<p class="text-sm text-gray-500">Inter Miami CF</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-gray-700">Forward</td>
+<td class="p-4 text-gray-700">Set 1</td>
+<td class="p-4 text-gray-700">$50,000,000</td>
+<td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Sold</span></td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 rounded-full hover:bg-gray-100"><span class="material-symbols-outlined text-gray-600">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-50"><span class="material-symbols-outlined text-red-500">delete</span></button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="p-4">
+<div class="flex items-center gap-4">
+<img alt="Cristiano Ronaldo" class="h-12 w-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp3-eN2ZYyNajfuUwG4EeDqKbgSTN96-0yERTBjvJ7wEcsHisRQpTzMa6HUWKsasm-iJke2fhjml7ZjI0HoLHnIw2TkkVu7620AseQjUDNK0DXsaf9Lut3MCwI3aicNn8U_Ao1IP9RnojAQd-qcEZwz0HEEu0Zfuvw5KpxsV93E6pUDsSWaKVUY82sEarsxFtsGUzsuzLWhew4fVxbbttyBDhM57xPOLfJZ96XwVO5oRsSI2nIDxT73PeRgZvr5LDk0_rAEkJ-5GA"/>
+<div>
+<p class="font-semibold text-gray-900">Cristiano Ronaldo</p>
+<p class="text-sm text-gray-500">Al-Nassr FC</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-gray-700">Forward</td>
+<td class="p-4 text-gray-700">Set 1</td>
+<td class="p-4 text-gray-700">$45,000,000</td>
+<td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Unsold</span></td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 rounded-full hover:bg-gray-100"><span class="material-symbols-outlined text-gray-600">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-50"><span class="material-symbols-outlined text-red-500">delete</span></button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="p-4">
+<div class="flex items-center gap-4">
+<img alt="Kevin De Bruyne" class="h-12 w-12 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBp3-eN2ZYyNajfuUwG4EeDqKbgSTN96-0yERTBjvJ7wEcsHisRQpTzMa6HUWKsasm-iJke2fhjml7ZjI0HoLHnIw2TkkVu7620AseQjUDNK0DXsaf9Lut3MCwI3aicNn8U_Ao1IP9RnojAQd-qcEZwz0HEEu0Zfuvw5KpxsV93E6pUDsSWaKVUY82sEarsxFtsGUzsuzLWhew4fVxbbttyBDhM57xPOLfJZ96XwVO5oRsSI2nIDxT73PeRgZvr5LDk0_rAEkJ-5GA"/>
+<div>
+<p class="font-semibold text-gray-900">Kevin De Bruyne</p>
+<p class="text-sm text-gray-500">Manchester City</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-gray-700">Midfielder</td>
+<td class="p-4 text-gray-700">Set 2</td>
+<td class="p-4 text-gray-700">$70,000,000</td>
+<td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Available</span></td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 rounded-full hover:bg-gray-100"><span class="material-symbols-outlined text-gray-600">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-50"><span class="material-symbols-outlined text-red-500">delete</span></button>
+</div>
+</td>
+</tr>
+<tr>
+<td class="p-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-gray-400 text-5xl">account_circle</span>
+<div>
+<p class="font-semibold text-gray-900">Virgil van Dijk</p>
+<p class="text-sm text-gray-500">Liverpool FC</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-gray-700">Defender</td>
+<td class="p-4 text-gray-700">Set 2</td>
+<td class="p-4 text-gray-700">$40,000,000</td>
+<td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Available</span></td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 rounded-full hover:bg-gray-100"><span class="material-symbols-outlined text-gray-600">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-50"><span class="material-symbols-outlined text-red-500">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="space-y-8 hidden" id="rules-view">
+<div class="flex justify-between items-center">
+<h2 class="text-2xl font-bold text-gray-800">Bid Rules</h2>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+<h3 class="text-xl font-bold text-gray-900 mb-6">Bid Increment Rules</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+<div>
+<p class="font-medium text-gray-800">Increment: <span class="text-purple-600">$1,000</span></p>
+<p class="text-sm text-gray-500">Up to a bid of: $100,000</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-gray-200"><span class="material-symbols-outlined text-gray-600 text-lg">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-100"><span class="material-symbols-outlined text-red-500 text-lg">delete</span></button>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+<div>
+<p class="font-medium text-gray-800">Increment: <span class="text-purple-600">$5,000</span></p>
+<p class="text-sm text-gray-500">Up to a bid of: $500,000</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-gray-200"><span class="material-symbols-outlined text-gray-600 text-lg">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-100"><span class="material-symbols-outlined text-red-500 text-lg">delete</span></button>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+<div>
+<p class="font-medium text-gray-800">Increment: <span class="text-purple-600">$10,000</span></p>
+<p class="text-sm text-gray-500">For bids over: $500,000</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-gray-200"><span class="material-symbols-outlined text-gray-600 text-lg">edit</span></button>
+<button class="p-2 rounded-full hover:bg-red-100"><span class="material-symbols-outlined text-red-500 text-lg">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+<h3 class="text-xl font-bold text-gray-900 mb-6">Add New Rule</h3>
+<form class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="increment">Increment Amount</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="text-gray-500 sm:text-sm">$</span>
+</div>
+<input class="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-purple-500 focus:ring-purple-500" id="increment" name="increment" placeholder="5,000" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="threshold">Up To Threshold</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="text-gray-500 sm:text-sm">$</span>
+</div>
+<input class="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-purple-500 focus:ring-purple-500" id="threshold" name="threshold" placeholder="500,000" type="text"/>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full bg-pink-600 text-white font-semibold py-2.5 px-5 rounded-lg hover:bg-pink-700 transition-colors flex items-center justify-center gap-2" type="submit">
+<span class="material-symbols-outlined">add</span>
+                                        Add Rule
+                                    </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('#main-nav a[href^="#"]');
+            const views = {
+                'teams': document.getElementById('teams-view'),
+                'players': document.getElementById('players-view'),
+                'rules': document.getElementById('rules-view')
+            };
+            function switchView(targetId) {
+                Object.values(views).forEach(view => {
+                    if (view) view.classList.add('hidden')
+                });
+                if (views[targetId]) {
+                    views[targetId].classList.remove('hidden');
+                }
+                navLinks.forEach(link => {
+                    const linkTarget = link.getAttribute('href').substring(1);
+                    if (linkTarget === targetId) {
+                        link.classList.add('bg-pink-50', 'text-pink-600');
+                        link.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                        link.querySelector('.material-symbols-outlined').classList.add('filled');
+                        link.querySelector('span:last-child').classList.add('font-semibold');
+                        link.querySelector('span:last-child').classList.remove('font-medium');
+                    } else {
+                        link.classList.remove('bg-pink-50', 'text-pink-600');
+                        link.classList.add('text-gray-600', 'hover:bg-gray-100');
+                        link.querySelector('.material-symbols-outlined').classList.remove('filled');
+                        link.querySelector('span:last-child').classList.remove('font-semibold');
+                        link.querySelector('span:last-child').classList.add('font-medium');
+                    }
+                });
+            }
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    switchView(targetId);
+                    window.location.hash = targetId;
+                });
+            });
+            // Initial view based on hash or default to 'teams'
+            const initialView = window.location.hash.substring(1) || 'teams';
+            switchView(initialView);
+        });
+    </script>
+
+</body></html>

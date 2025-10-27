@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<title>UCL Player Auction</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --ucl-pink: #d22d9c;
+            --ucl-purple: #4f2e8e;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+<div class="relative flex size-full min-h-screen flex-col overflow-x-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-gray-200 px-6 py-3 shadow-sm">
+<div class="flex items-center gap-4">
+<img alt="UCL Logo" class="h-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8RcOYNSw_HWToXyLEgxzXZy7nOQ2tGXP_htkGh7Lwj0iioYz2cDRhsh4blYHgGxdpvdFBboJZe4ifUSXk08mH9zsp_Lb16C215j6onpp-N8QrG42Ub5jSjh_zXKkzuO75tbzYEAkpm2xSP0S71MYiP3ax8XrEhnRQKGNUh2RoilEN0lCuYBj7Pefga3To2HqjwdybJ06uVhe3QtGtm4vv6iUeWsKzLjzQcuyLLoi8RavlHOIaI51-G7zD0-gK2-NHDtgdFcae-N0"/>
+<h1 class="text-xl font-bold text-gray-900">Player Auction</h1>
+</div>
+<nav class="flex items-center gap-6 text-sm">
+<a class="font-medium text-gray-600 transition-colors hover:text-[var(--ucl-pink)]" href="#">Dashboard</a>
+<a class="font-medium text-gray-600 transition-colors hover:text-[var(--ucl-pink)]" href="#">Teams</a>
+<a class="font-medium text-gray-600 transition-colors hover:text-[var(--ucl-pink)]" href="#">Players</a>
+<a class="font-medium text-gray-600 transition-colors hover:text-[var(--ucl-pink)]" href="#">Rules</a>
+<a class="font-medium text-gray-600 transition-colors hover:text-[var(--ucl-pink)]" href="#">Summary</a>
+</nav>
+<div class="flex items-center gap-4">
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAJpLjaLIJKn0zQ7Vkbrv1YoaQj5eHPuYOCXD0b6bgsF6Wv-gLKh1-6HF7xA8b9ZjHknTvYxzjdEbQXgVD_8pxzGCXzZD0YVwjbH_qexjXhS8cq5QXVFHoAC6gUKTCcoT0xNUwa_8EZeTinq3FOidBGjlgoFKZjfQfpkihUXf7TPvbgWE4RteZHu9ldB_MR2IWA7cV0fetNrImocECi52Q_UQUbyKFZMbgiRRAHX34XfQBp6VBKLRiBUIDv8Ej1aOgwkT4eyYPw0Sk");'></div>
+<div class="text-sm">
+<div class="font-semibold">Jane Doe</div>
+<div class="text-gray-500">Auctioneer</div>
+</div>
+</div>
+</header>
+<main class="flex-1 px-6 py-6">
+<div class="mx-auto grid max-w-full grid-cols-12 gap-6">
+<div class="col-span-12 xl:col-span-7">
+<div class="rounded-2xl bg-white p-6 shadow-lg">
+<div class="mb-4 flex flex-wrap items-center justify-between gap-4">
+<h2 class="text-2xl font-bold text-gray-900">Live Auction</h2>
+<div class="flex items-center gap-2 text-sm text-gray-500">
+<span class="font-semibold">Sponsors:</span>
+<img alt="Sponsor 1" class="h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrTtGODUJvO0GTQ72QftH_nQQNajuj4oecehzMIgZmTNZqR5IpxY553lQV7z-fUHFO_MUi875knrH_p__wD_Uoa6JWy5bkqu1ewUuhdPUDEb1yCtKarwwZJ5zl7Ha52PtKtkFAQb7D9DHPsOT0UXYNi_X6lAGu4dWb7McYlHHvSg8Nhe6UukmUQUmJmxvQEI6VtkDfTTpQNu9-V615xEoB9sjdRRfusDwvjCsLrNF3JzQ8l63dLsN6886Lp5P6nhNTW9wEbNfYlBU"/>
+<img alt="Sponsor 2" class="h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaigbpyijSpoHujLIJsaxozr34d7fdfPjW_Lpj9ME2KWkBG0bC-VkTNgL22ppDXiDrY8mBDvp2r0kTvMChOzpbeOnLWowGxhM3wz0Wi8C3_-Y3r9MCiklMuYo5l0NpND8BbmKqkDTJ5sqCURrlwF5iw2SYRYAC1DfUQnE1gGwI0HLp1AWOiV82FfiupMdhqrTtWnpiDrpDLXLdMFKiwd47v_UHEGzF_ZJ3XpLpL3tsQ9jaLYQkUR1nol1bmVtg2hlLDnySxrWPQX8"/>
+</div>
+</div>
+<div class="mb-6 rounded-xl border border-purple-200 bg-purple-50 p-4">
+<h3 class="text-sm font-medium text-purple-800">Current Auction Set</h3>
+<p class="text-lg font-bold text-purple-700">Premier League Strikers - Round 1</p>
+</div>
+<div class="@container">
+<div class="grid grid-cols-1 gap-6 @[500px]:grid-cols-2">
+<div>
+<div class="aspect-[4/5] w-full rounded-xl bg-cover bg-center bg-no-repeat shadow-md" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB5Rt3w77zCG5sJKcIMwVhTmNzFovQ6x69tQVlpYkWEE06iBaC5sERYq4Oun5Y2TTHvud0_gg39APZqOEQmkxm5ccN6jrVpqrdEY5N3DxEmpU-uKEOATivEXW4wRn5ZRzETsAYX-z0UGtDKxZskB6k0UYUVM7XbWfKdbhhLWv1rD-wipAqEtWmLfJwMGbEDWIoSoi99hw2VRfFtUfGMFAXIzGCKU4KXKchUIONLFp_XoXTgblxGbBkFt09H4jdOYd4pwa6G4oFK48o");'></div>
+</div>
+<div class="flex flex-col">
+<h4 class="text-3xl font-bold text-[var(--ucl-purple)]">Lionel Messi</h4>
+<p class="mb-3 text-lg font-medium text-gray-600">Forward | Base Price: $50M</p>
+<p class="mb-4 text-sm leading-relaxed text-gray-700">
+                                        An Argentine professional footballer who plays as a forward for and captains both Major League Soccer club Inter Miami and the Argentina national team. Widely regarded as one of the greatest players of all time, Messi has won a record eight Ballon d'Or awards.
+                                    </p>
+<div class="mt-auto flex items-center gap-4 text-sm">
+<span class="font-semibold">Team:</span>
+<span class="rounded-full bg-gray-200 px-3 py-1 font-medium text-gray-800">Unsold</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-12 xl:col-span-5">
+<div class="grid grid-cols-1 gap-6">
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+<div class="rounded-2xl bg-white p-4 shadow-lg">
+<div class="flex h-full flex-col justify-between rounded-xl border border-pink-200 bg-pink-50 p-4 text-center">
+<p class="text-sm font-medium text-pink-800">Current Bid</p>
+<p class="my-2 text-4xl font-bold text-pink-600">$75M</p>
+<div></div>
+</div>
+</div>
+<div class="rounded-2xl bg-white p-4 shadow-lg">
+<div class="flex h-full flex-col justify-between rounded-xl border border-purple-200 bg-purple-50 p-4 text-center">
+<p class="text-sm font-medium text-purple-800">Highest Bidder</p>
+<p class="my-2 text-2xl font-semibold text-purple-700">Manchester United</p>
+<div class="text-xs text-purple-600">via Jane Doe</div>
+</div>
+</div>
+</div>
+<div class="rounded-2xl bg-white p-6 shadow-lg">
+<h3 class="mb-4 text-xl font-bold text-gray-800">Bidding Actions</h3>
+<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+<button class="flex h-12 flex-col items-center justify-center gap-1 rounded-lg bg-[var(--ucl-pink)] px-2 text-white shadow-md transition-all hover:bg-opacity-90">
+<span class="text-xs font-bold">Man United</span>
+<span class="text-xs font-medium">($75.5M)</span>
+</button>
+<button class="flex h-12 flex-col items-center justify-center gap-1 rounded-lg bg-[var(--ucl-pink)] px-2 text-white shadow-md transition-all hover:bg-opacity-90">
+<span class="text-xs font-bold">Chelsea</span>
+<span class="text-xs font-medium">($75.5M)</span>
+</button>
+<button class="flex h-12 flex-col items-center justify-center gap-1 rounded-lg bg-[var(--ucl-pink)] px-2 text-white shadow-md transition-all hover:bg-opacity-90">
+<span class="text-xs font-bold">Liverpool</span>
+<span class="text-xs font-medium">($75.5M)</span>
+</button>
+<button class="flex h-12 flex-col items-center justify-center gap-1 rounded-lg bg-[var(--ucl-pink)] px-2 text-white shadow-md transition-all hover:bg-opacity-90">
+<span class="text-xs font-bold">Arsenal</span>
+<span class="text-xs font-medium">($75.5M)</span>
+</button>
+</div>
+</div>
+<div class="rounded-2xl bg-white p-6 shadow-lg">
+<h3 class="mb-4 text-xl font-bold text-gray-800">Auctioneer Controls</h3>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex h-11 items-center justify-center gap-2 rounded-lg bg-green-500 px-4 text-sm font-bold text-white transition-colors hover:bg-green-600">
+<span class="material-symbols-outlined text-base">gavel</span>
+<span>Sold</span>
+</button>
+<button class="flex h-11 items-center justify-center gap-2 rounded-lg bg-red-500 px-4 text-sm font-bold text-white transition-colors hover:bg-red-600">
+<span class="material-symbols-outlined text-base">do_not_disturb_on</span>
+<span>Unsold</span>
+</button>
+<button class="flex h-11 items-center justify-center gap-2 rounded-lg bg-gray-400 px-4 text-sm font-bold text-white transition-colors hover:bg-gray-500">
+<span class="material-symbols-outlined text-base">undo</span>
+<span>Undo Bid</span>
+</button>
+</div>
+</div>
+<div class="rounded-2xl bg-white p-6 shadow-lg">
+<h3 class="mb-4 text-xl font-bold text-gray-800">Player &amp; Set Selection</h3>
+<div class="space-y-3">
+<div class="relative">
+<select class="h-11 w-full appearance-none rounded-lg border-gray-300 px-4 pr-10 text-sm transition-colors focus:border-[var(--ucl-pink)] focus:ring-[var(--ucl-pink)]">
+<option selected="">Set: Premier League Strikers - R1</option>
+<option>Set: Premier League Midfielders - R1</option>
+<option>Set: La Liga Defenders - R2</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">expand_more</span>
+</div>
+<div class="relative">
+<input class="h-11 w-full rounded-lg border-gray-300 px-4 pr-10 text-sm transition-colors focus:border-[var(--ucl-pink)] focus:ring-[var(--ucl-pink)]" placeholder="Search for a player..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+</div>
+<button class="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-300">
+<span class="material-symbols-outlined text-base">person_add</span>
+<span>Next Player (Random)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

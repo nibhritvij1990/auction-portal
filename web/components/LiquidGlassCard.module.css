@@ -1,0 +1,68 @@
+.wrapper {
+  position: relative;
+  overflow: hidden;
+  color: white;
+  cursor: default;
+  border-radius: 0.75rem;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2),
+              0 0 20px rgba(0, 0, 0, 0.1),
+              0 -1px 1px 0 white,
+              0 1px 1px 0 white,
+              1px 1px 1px 0 rgba(0, 0, 0, 0.2),
+              -1px 0 1px 0 rgba(0, 0, 0, 0.2),
+              0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.compact {
+  padding: 0.75rem 1rem;
+}
+
+.cozy {
+  padding: 1rem 1.25rem;
+}
+
+.roomy {
+  padding: 1.25rem 1.5rem;
+}
+
+.no-size {
+  padding: 0;
+}
+
+.effect {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  backdrop-filter: blur(2px);
+  filter: url(#lg-glass-distortion);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: inherit;
+}
+
+.tint {
+  z-index: 1;
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: inherit;
+}
+
+.shine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, 0.5),
+              inset -1px -1px 1px 1px rgba(255, 255, 255, 0.5);
+  border-radius: inherit;
+}
+
+.content {
+  z-index: 3;
+  position: relative;
+  border-radius: inherit;
+  height: 100%;
+  width: 100%;
+} 
