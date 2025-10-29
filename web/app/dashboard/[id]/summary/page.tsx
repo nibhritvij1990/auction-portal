@@ -173,17 +173,36 @@ export default function SummaryPage() {
   }, [auctionId]);
 
   useEffect(() => {
-    const channelRef: { current: any } = { current: null };
-    const channel = supabase
-      .channel(`summary-${auctionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => scheduleRefresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_sponsors', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
-      .subscribe();
-    channelRef.current = channel;
-    return () => { try { supabase.removeChannel(channel); } catch {} };
+    let cancelled = false;
+    let channel = subscribe();
+
+    function subscribe() {
+      const ch = supabase
+        .channel(`summary-${auctionId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => scheduleRefresh())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_events', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_sponsors', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `auction_id=eq.${auctionId}` }, () => scheduleRefresh())
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') return;
+          if (cancelled) return;
+          if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            try { supabase.removeChannel(ch); } catch {}
+            setTimeout(() => {
+              if (!cancelled) channel = subscribe();
+            }, 1200);
+          }
+        });
+      return ch;
+    }
+
+    return () => {
+      cancelled = true;
+      try { supabase.removeChannel(channel); } catch {}
+    };
   }, [auctionId]);
 
   const sortedTeams = useMemo(() => {
@@ -346,7 +365,7 @@ export default function SummaryPage() {
     if (curr === null) return base;
     let step = 1;
     if (incRules.length > 0) {
-      const found = incRules.find(r => curr <= Number(r.threshold));
+      const found = incRules.find(r => curr < Number(r.threshold));
       step = found ? Number(found.increment) : Number(incRules[incRules.length - 1].increment);
     }
     return Number(curr) + Number(step);

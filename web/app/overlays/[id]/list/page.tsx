@@ -65,9 +65,16 @@ export default function PlayersListOverlayPage() {
     const currentScope = (auction as any)?.queue_scope || 'default';
     const currentSetId = (auction as any)?.current_set_id || null;
     // Filter sold by scope set if applicable
+    const inSet = (r: Row) => !currentSetId || r.set_id === currentSetId;
     let soldScoped = so;
-    if (currentScope === 'set' && currentSetId) soldScoped = so.filter(r => r.set_id === currentSetId);
-    const merged = [...av, ...un, ...soldScoped].map(r => ({ ...r, set_name: r.set_id ? sm[r.set_id] : undefined }));
+    let avScoped = av;
+    let unScoped = un;
+    if (currentScope === 'set' && currentSetId) {
+      soldScoped = so.filter(inSet);
+      avScoped = av.filter(inSet);
+      unScoped = un.filter(inSet);
+    }
+    const merged = [...avScoped, ...unScoped, ...soldScoped].map(r => ({ ...r, set_name: r.set_id ? sm[r.set_id] : undefined }));
     setRows(merged);
     // Set scope label for header
     let label = 'All (Default)';
@@ -78,13 +85,39 @@ export default function PlayersListOverlayPage() {
 
   useEffect(() => { loadAll(); }, [auctionId]);
   useEffect(() => {
-    const ch = supabase
-      .channel(`overlay-list-${auctionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
-      .subscribe();
-    return () => { try { supabase.removeChannel(ch); } catch {} };
-  }, [auctionId]);
+    let cancelled = false;
+    let channel = subscribe();
+
+    function subscribe() {
+      const ch = supabase
+        .channel(`overlay-list-${auctionId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_events', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            loadAll();
+            return;
+          }
+          if (cancelled) return;
+          if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            try { supabase.removeChannel(ch); } catch {}
+            setTimeout(() => {
+              if (!cancelled) channel = subscribe();
+            }, 1200);
+          }
+        });
+      return ch;
+    }
+
+    return () => {
+      cancelled = true;
+      try { supabase.removeChannel(channel); } catch {}
+    };
+  }, [auctionId, loadAll]);
 
   const display = useMemo(() => {
     let arr = rows.slice();

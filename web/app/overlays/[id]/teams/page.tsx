@@ -46,12 +46,38 @@ export default function TeamsOverlayPage() {
 
   useEffect(() => { loadAll(); }, [auctionId]);
   useEffect(() => {
-    const ch = supabase
-      .channel(`overlay-teams-${auctionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
-      .subscribe();
-    return () => { try { supabase.removeChannel(ch); } catch {} };
+    let cancelled = false;
+    let channel = subscribe();
+
+    function subscribe() {
+      const ch = supabase
+        .channel(`overlay-teams-${auctionId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_events', filter: `auction_id=eq.${auctionId}` }, () => loadAll())
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            loadAll();
+            return;
+          }
+          if (cancelled) return;
+          if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            try { supabase.removeChannel(ch); } catch {}
+            setTimeout(() => {
+              if (!cancelled) channel = subscribe();
+            }, 1200);
+          }
+        });
+      return ch;
+    }
+
+    return () => {
+      cancelled = true;
+      try { supabase.removeChannel(channel); } catch {}
+    };
   }, [auctionId]);
 
   return (

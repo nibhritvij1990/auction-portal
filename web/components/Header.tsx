@@ -11,7 +11,7 @@ import { useAuthReady } from '../lib/useAuthReady';
 export default function Header() {
   const pathname = usePathname();
   // Hide header on manage-style pages
-  const isManage = /^\/dashboard\/[^/]+\/(teams|players|rules|sponsors|summary)/.test(pathname ?? '');
+  const isManage = /^\/dashboard\/[^/]+\/(teams|players|rules|sponsors|summary|strategy)/.test(pathname ?? '');
   if (isManage) return null;
 
   const { ready, session } = useAuthReady();
@@ -149,8 +149,8 @@ export default function Header() {
       )}
       {!isAuthPage && (
         <div className="flex items-center gap-4" style={{zIndex: 2}}>
-          <button className="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
-            <span className="material-symbols-outlined text-white">notifications</span>
+          <button className="relative rounded-full p-2 text-gray-50 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+            <span className="material-symbols-outlined">notifications</span>
             <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-pink-500 border-2 border-white"></span>
           </button>
           {ready && userEmail ? (

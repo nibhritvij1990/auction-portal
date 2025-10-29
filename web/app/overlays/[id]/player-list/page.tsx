@@ -138,13 +138,38 @@ export default function PlayerOverlayPage() {
   }, [auctionId]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel(`overlay-player-${auctionId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => fetchCurrent())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
-      .subscribe();
-    return () => { try { supabase.removeChannel(channel); } catch {} };
+    let cancelled = false;
+    let channel = subscribe();
+
+    function subscribe() {
+      const ch = supabase
+        .channel(`overlay-player-${auctionId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => fetchCurrent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_events', filter: `auction_id=eq.${auctionId}` }, () => fetchCurrent())
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            fetchCurrent();
+            return;
+          }
+          if (cancelled) return;
+          if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            try { supabase.removeChannel(ch); } catch {}
+            setTimeout(() => {
+              if (!cancelled) channel = subscribe();
+            }, 1200);
+          }
+        });
+      return ch;
+    }
+
+    return () => {
+      cancelled = true;
+      try { supabase.removeChannel(channel); } catch {}
+    };
   }, [auctionId]);
 
   return (

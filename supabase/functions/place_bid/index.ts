@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
         .order('threshold', { ascending: true });
       let step = 1;
       if (rulesAsc && rulesAsc.length > 0) {
-        const found = rulesAsc.find((r: any) => Number(current) <= Number(r.threshold));
+        const found = rulesAsc.find((r: any) => Number(current) < Number(r.threshold));
         step = found ? Number(found.increment) : Number(rulesAsc[rulesAsc.length - 1].increment);
       }
       requiredNext = Number(current) + Number(step);

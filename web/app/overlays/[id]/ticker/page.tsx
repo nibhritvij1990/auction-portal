@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '../../../../lib/supabaseClient';
@@ -22,13 +23,27 @@ export default function TickerOverlayPage() {
       .from('auction_events')
       .select('id,created_at,type,payload')
       .eq('auction_id', auctionId)
+      .in('type', ['player_sold', 'player_unsold'])
       .order('created_at', { ascending: false })
-      .limit(maxItems);
-    const filtered = (((data as any[]) || []).filter((e: any) => e?.type === 'player_sold' || e?.type === 'player_unsold')) as any[];
+      .limit(Math.min(500, maxItems * 10));
+
+    const rows = Array.isArray(data) ? data : [];
+    const seen = new Set<string>();
+    const dedup: EventRow[] = [];
+    for (const ev of rows) {
+      const pid = ev?.payload?.player_id;
+      if (!pid) continue;
+      const key = String(pid);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      dedup.push(ev as EventRow);
+      if (dedup.length >= maxItems) break;
+    }
+
     // Hydrate missing names if needed
     const needPlayerIds = new Set<string>();
     const needTeamIds = new Set<string>();
-    for (const ev of filtered) {
+    dedup.forEach((ev: any) => {
       const pid = ev?.payload?.player_id;
       const pname = ev?.payload?.player_name;
       if (pid && !pname) needPlayerIds.add(String(pid));
@@ -37,9 +52,9 @@ export default function TickerOverlayPage() {
         const tname = ev?.payload?.team_name;
         if (tid && !tname) needTeamIds.add(String(tid));
       }
-    }
-    let playerMap: Record<string, string> = {};
-    let teamMap: Record<string, string> = {};
+    });
+    const playerMap: Record<string, string> = {};
+    const teamMap: Record<string, string> = {};
     if (needPlayerIds.size > 0) {
       const { data: pl } = await supabase.from('auction_players').select('id,name').in('id', Array.from(needPlayerIds));
       (pl as any[])?.forEach((r: any) => { if (r?.id) playerMap[String(r.id)] = r?.name || ''; });
@@ -48,26 +63,66 @@ export default function TickerOverlayPage() {
       const { data: tm } = await supabase.from('teams').select('id,name').in('id', Array.from(needTeamIds));
       (tm as any[])?.forEach((r: any) => { if (r?.id) teamMap[String(r.id)] = r?.name || ''; });
     }
-    const hydrated = filtered.map((ev: any) => {
-      const p = { ...(ev?.payload || {}) };
-      if (p.player_id && !p.player_name && playerMap[p.player_id]) p.player_name = playerMap[p.player_id];
-      if (ev?.type === 'player_sold' && p.team_id && !p.team_name && teamMap[p.team_id]) p.team_name = teamMap[p.team_id];
-      return { ...ev, payload: p };
-    });
-    setEvents(hydrated.reverse());
+
+    const hydrated = dedup
+      .map((ev: any) => {
+        const p = { ...(ev?.payload || {}) };
+        if (p.player_id && !p.player_name && playerMap[p.player_id]) p.player_name = playerMap[p.player_id];
+        if (ev?.type === 'player_sold' && p.team_id && !p.team_name && teamMap[p.team_id]) p.team_name = teamMap[p.team_id];
+        return { ...ev, payload: p } as EventRow;
+      })
+      .reverse();
+
+    setEvents(hydrated);
   }
 
   useEffect(() => { loadRecent(); }, [auctionId, maxItems]);
   useEffect(() => {
-    const ch = supabase
-      .channel(`overlay-ticker-${auctionId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auction_events', filter: `auction_id=eq.${auctionId}` }, () => loadRecent())
-      .subscribe();
-    return () => { try { supabase.removeChannel(ch); } catch {} };
-  }, [auctionId]);
+    let cancelled = false;
+    let channel = subscribe();
 
-  const nodes = useMemo(() => {
-    return events.map((e, i) => <TickerItem key={e.id || i} ev={e} />);
+    function subscribe() {
+      const ch = supabase
+        .channel(`overlay-ticker-${auctionId}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'auction_events', filter: `auction_id=eq.${auctionId}` }, () => loadRecent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auction_players', filter: `auction_id=eq.${auctionId}` }, () => loadRecent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments', filter: `auction_id=eq.${auctionId}` }, () => loadRecent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auctions', filter: `id=eq.${auctionId}` }, () => loadRecent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bids', filter: `auction_id=eq.${auctionId}` }, () => loadRecent())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'teams', filter: `auction_id=eq.${auctionId}` }, () => loadRecent())
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            loadRecent();
+            return;
+          }
+          if (cancelled) return;
+          if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            try { supabase.removeChannel(ch); } catch {}
+            setTimeout(() => {
+              if (!cancelled) channel = subscribe();
+            }, 1200);
+          }
+        });
+      return ch;
+    }
+
+    return () => {
+      cancelled = true;
+      try { supabase.removeChannel(channel); } catch {}
+    };
+  }, [auctionId, loadRecent]);
+
+  const marqueeNodes = useMemo(() => {
+    if (events.length === 0) return [];
+    const repeat = Math.max(2, Math.ceil(12 / events.length));
+    const output: React.ReactNode[] = [];
+    for (let r = 0; r < repeat; r++) {
+      events.forEach((ev, idx) => {
+        const key = `${ev.id ?? ev.payload?.player_id ?? idx}-${r}`;
+        output.push(<TickerItem key={key} ev={ev} />);
+      });
+    }
+    return output;
   }, [events]);
 
   return (
@@ -86,7 +141,11 @@ export default function TickerOverlayPage() {
             <div className="relative flex-1 overflow-hidden">
               <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white to-white/0 z-10" />
               <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white to-white/0 z-10" />
-              <TickerMarquee speedSec={speed}>{nodes}</TickerMarquee>
+              {events.length === 0 ? (
+                <div className="flex items-center justify-center py-6 text-gray-500 text-sm font-medium">No sold or unsold players yet.</div>
+              ) : (
+                <TickerMarquee speedSec={speed}>{marqueeNodes}</TickerMarquee>
+              )}
             </div>
           </div>
         </div>
@@ -95,18 +154,20 @@ export default function TickerOverlayPage() {
   );
 }
 
-function TickerMarquee({ children, speedSec }: { children: React.ReactNode; speedSec: number }) {
+function TickerMarquee({ children, speedSec }: { children: React.ReactNode[]; speedSec: number }) {
+  if (!children || children.length === 0) {
+    return null;
+  }
   const duration = `${speedSec}s`;
   return (
     <div className="relative w-full py-2">
       <div className="flex animate-[marquee_linear_infinite]" style={{ animationDuration: duration }}>
-        <div className="flex w-[200%] items-center">
-          <div className="flex-shrink-0 flex items-center space-x-8 p-3 w-max">{children}</div>
-          <div className="flex-shrink-0 flex items-center space-x-8 p-3 w-max">{children}</div>
+        <div className="flex items-center space-x-8 p-3 w-max">
+          {children}
         </div>
       </div>
       <style jsx>{`
-        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-100%); } }
         .animate-[marquee_linear_infinite] { animation-name: marquee; animation-timing-function: linear; animation-iteration-count: infinite; }
       `}</style>
     </div>
@@ -120,11 +181,11 @@ function TickerItem({ ev }: { ev: any }) {
   return (
     <>
       <div className="flex items-center space-x-6 text-lg">
-        <span className="font-semibold text-gray-700">{name}</span>
+        <span className="font-semibold text-gray-700 text-nowrap">{name}</span>
         <span className="material-symbols-outlined text-gray-400">arrow_forward</span>
         {isSold ? (
           <>
-            <span className="font-bold text-pink-600">{String(ev?.payload?.team_name || '—')}</span>
+            <span className="font-bold text-pink-600 text-nowrap">{String(ev?.payload?.team_name || '—')}</span>
             <span className="font-bold text-gray-800">{fmtCurrency(ev?.payload?.amount ?? null)}</span>
           </>
         ) : (

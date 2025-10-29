@@ -1,6 +1,6 @@
 'use client'; 
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '../../../../lib/supabaseClient';
@@ -9,6 +9,16 @@ import { useAuthReady } from '../../../../lib/useAuthReady';
 const PLAYER_SILHOUETTE_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(
   "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 420'>\n  <defs>\n    <linearGradient id='g' x1='0' y1='0' x2='0' y2='1'>\n      <stop offset='0%' stop-color='#f3f4f6'/>\n      <stop offset='100%' stop-color='#e5e7eb'/>\n    </linearGradient>\n  </defs>\n  <rect width='100%' height='100%' fill='url(#g)'/>\n  <g fill='#cbd5e1'>\n    <circle cx='160' cy='120' r='56'/>\n    <path d='M56 300c0-56 48-96 104-96s104 40 104 96v60H56z'/>\n  </g>\n</svg>"
 )}`;
+
+type Aggregates = { [teamId: string]: { players: number; spent: number } };
+type BidRule = { threshold: number; increment: number };
+type Sponsor = { id: string; name: string; logo_path: string | null; logo_url: string | null, sponsor_type: string };
+
+type Strategy = {
+  interest: 'high' | 'medium' | 'low' | 'none';
+  max_bid: number | null;
+  notes: string | null;
+};
 
 export default function AuctionConsolePage() {
   const params = useParams();
@@ -40,8 +50,47 @@ export default function AuctionConsolePage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
   const [hasPlayersInScope, setHasPlayersInScope] = useState<boolean>(true);
+  const [currentStrategy, setCurrentStrategy] = useState<Strategy | null>(null);
+  const [teamRepFor, setTeamRepFor] = useState<string | null>(null);
   const channelRef = (typeof window !== 'undefined') ? (window as any).__consoleChannelRef ?? { current: null } : { current: null };
   if (typeof window !== 'undefined' && !(window as any).__consoleChannelRef) (window as any).__consoleChannelRef = channelRef;
+
+  const bidsRefreshTimerRef = useRef<number | null>(null);
+  const pendingBidRef = useRef<{ playerId: string; teamId: string; amount: number } | null>(null);
+  const bidQueueRef = useRef<string[]>([]);
+  const placingBidRef = useRef<boolean>(false);
+  const [hasCurrentBids, setHasCurrentBids] = useState<boolean>(false);
+
+  const fetchStrategy = useCallback(async () => {
+    if (!player?.id || !session?.user || !role) {
+      setCurrentStrategy(null);
+      return;
+    }
+
+    let teamIdForStrategy: string | null = null;
+    if (role === 'admin') {
+      // For admins, we need a way to select a team's strategy to view.
+      // If they are also a rep for a team, we'll show that.
+      // Otherwise, we'll fall back to showing the highest bidder's team strategy.
+      teamIdForStrategy = teamRepFor || highestBidderTeamId;
+    } else if (role === 'team_rep') {
+      teamIdForStrategy = teamRepFor;
+    }
+
+    if (!teamIdForStrategy) {
+      setCurrentStrategy(null);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('team_strategies')
+      .select('interest, max_bid, notes')
+      .eq('team_id', teamIdForStrategy)
+      .eq('player_id', player.id)
+      .single();
+
+    setCurrentStrategy((data as Strategy) ?? null);
+  }, [player?.id, session?.user, role, highestBidderTeamId, teamRepFor]);
 
   // Hydrate event payloads with names so the log never shows raw IDs
   const teamNameMap = useMemo(() => {
@@ -84,8 +133,6 @@ export default function AuctionConsolePage() {
   }, [events, teamNameMap, playerNameCache]);
 
   // Realtime throttling + optimistic bid state
-  const bidsRefreshTimerRef = useRef<number | null>(null);
-  const pendingBidRef = useRef<{ playerId: string; teamId: string; amount: number } | null>(null);
   function scheduleBidRefresh(fn: () => void, delay = 80) {
     if (bidsRefreshTimerRef.current) { clearTimeout(bidsRefreshTimerRef.current); bidsRefreshTimerRef.current = null; }
     bidsRefreshTimerRef.current = window.setTimeout(fn, delay);
@@ -98,6 +145,20 @@ export default function AuctionConsolePage() {
       if (!session?.user) { router.replace('/auth/sign-in'); return; }
       const { data: p } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
       if (mounted && p?.role) setRole(p.role);
+      
+      // If user is a team_rep or admin, find out if they represent a team for this auction
+      if (mounted && (p?.role === 'team_rep' || p?.role === 'admin')) {
+        const { data: repData } = await supabase
+          .from('team_representatives')
+          .select('team_id')
+          .eq('user_id', session.user.id)
+          .eq('auction_id', auctionId)
+          .single();
+        if (repData) {
+          setTeamRepFor(repData.team_id);
+        }
+      }
+
       setLoading(true);
       const [{ data: q }, { data: t }, { data: s }, { data: a }, { data: r }, { data: ag }, { data: sp }] = await Promise.all([
         supabase.from('v_auction_queue').select('next_player_id,next_player_name,remaining_available').eq('auction_id', auctionId).maybeSingle(),
@@ -167,11 +228,19 @@ export default function AuctionConsolePage() {
           .select('id,name,base_price,category,status,photo_path,photo_url,meta,bat_style,bowl_style,matches,runs,average,strike_rate,overs,wickets,economy,notes')
           .eq('id', playerToLoad)
           .maybeSingle();
-        if (pl) setPlayer(pl);
+        if (pl && (pl as any)?.status !== 'available') {
+          setPlayer(null);
+          setHasCurrentBids(false);
+          setAuction(prev => prev ? { ...prev, current_player_id: null } : prev);
+        } else {
+          setPlayer(pl ?? null);
+        }
       } else {
         setPlayer(null);
+        setHasCurrentBids(false);
       }
-      await refreshBidState(playerToLoad || undefined);
+      const latestBidState = await refreshBidState(playerToLoad || undefined);
+      setHasCurrentBids(latestBidState.amount !== null);
       setLoading(false);
     })();
     return () => { mounted = false; };
@@ -221,6 +290,12 @@ export default function AuctionConsolePage() {
   }, [titleSponsorName, auction?.name]);
 
   const auctionStatus = useMemo(() => String(auction?.status || 'draft').toLowerCase(), [auction?.status]);
+  const auctionIsLive = auctionStatus === 'live';
+  const auctionIsPaused = auctionStatus === 'paused';
+  const auctionIsClosed = auctionStatus === 'closed';
+  const auctionIsDraft = auctionStatus === 'draft';
+  const auctionNotStarted = auctionIsDraft;
+  const canAdjustQueue = !auctionNotStarted && !player?.id;
   const { statusLabel, statusClasses, statusInner } = useMemo(() => {
     const s = String(auction?.status || 'draft').toLowerCase();
     if (s === 'live') {
@@ -267,6 +342,11 @@ export default function AuctionConsolePage() {
       if (!selectedSetId) { setToast({ type: 'error', message: 'Please select a set when using By Set' }); setTimeout(() => setToast(null), 1800); return; }
       payload = { queue_scope: 'set', current_set_id: selectedSetId };
     }
+    if (!canAdjustQueue) {
+      setToast({ type: 'error', message: 'Cannot change player scope until the auction is open.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     const { error } = await supabase.from('auctions').update(payload).eq('id', auctionId);
     if (error) { setToast({ type: 'error', message: error.message }); setTimeout(() => setToast(null), 1800); }
     else { setToast({ type: 'success', message: 'Applied' }); setTimeout(() => setToast(null), 1200); }
@@ -281,6 +361,11 @@ export default function AuctionConsolePage() {
   }
 
   async function jumpToPlayerByName(query: string) {
+    if (!canAdjustQueue) {
+      setToast({ type: 'error', message: 'Auction not started yet.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     const scope = (auction as any)?.queue_scope || 'default';
     let q = supabase.from('auction_players').select('id,name,status,set_id').eq('auction_id', auctionId);
     if (scope === 'unsold') q = q.eq('status', 'unsold');
@@ -294,6 +379,7 @@ export default function AuctionConsolePage() {
   }
 
   async function searchPlayersByName(query: string) {
+    if (!canAdjustQueue) { setSearchResults([]); return; }
     if (!query || query.length < 2) { setSearchResults([]); return; }
     const scope = (auction as any)?.queue_scope || 'default';
     let q = supabase.from('auction_players').select('id,name,status,set_id,photo_path,photo_url').eq('auction_id', auctionId).eq('status', 'available');
@@ -317,6 +403,11 @@ export default function AuctionConsolePage() {
   }, []);
 
   async function handlePickPlayer(id: string) {
+    if (!canAdjustQueue) {
+      setToast({ type: 'error', message: 'Auction not started yet.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     await supabase.from('auctions').update({ current_player_id: id }).eq('id', auctionId);
     setShowSearchResults(false);
     setSearchTerm('');
@@ -344,8 +435,22 @@ export default function AuctionConsolePage() {
         .select('id,name,base_price,category,status,photo_path,photo_url,meta,bat_style,bowl_style,matches,runs,average,strike_rate,overs,wickets,economy,notes')
         .eq('id', currentId)
         .maybeSingle();
-      setPlayer(pl ?? null);
-      await refreshBidState(currentId);
+      if (pl && (pl as any)?.status !== 'available') {
+        await supabase
+          .from('auctions')
+          .update({ current_player_id: null })
+          .eq('id', auctionId)
+          .eq('current_player_id', currentId);
+        setPlayer(null);
+        setAuction(prev => prev ? { ...prev, current_player_id: null } : prev);
+        setCurrentBid(null);
+        setHighestBidderName(null);
+        setHighestBidderTeamId(null);
+        setHasCurrentBids(false);
+      } else {
+        setPlayer(pl ?? null);
+        await refreshBidState(currentId);
+      }
     } else {
       setPlayer(null);
       await refreshBidState(undefined);
@@ -368,7 +473,12 @@ export default function AuctionConsolePage() {
 
   async function refreshBidState(playerId?: string) {
     const pid = playerId || player?.id;
-    if (!pid) { setCurrentBid(null); setHighestBidderName(null); setHighestBidderTeamId(null); return; }
+    if (!pid) {
+      setCurrentBid(null);
+      setHighestBidderName(null);
+      setHighestBidderTeamId(null);
+      return { amount: null, teamId: null } as const;
+    }
     const { data: b } = await supabase
       .from('bids')
       .select('amount, team_id, teams(name)')
@@ -377,17 +487,34 @@ export default function AuctionConsolePage() {
       .order('amount', { ascending: false })
       .limit(1)
       .maybeSingle();
+    const pending = pendingBidRef.current;
     if (b) {
-      setCurrentBid(b.amount ?? null);
+      const amount = b?.amount != null ? Number(b.amount) : null;
       // @ts-ignore
-      setHighestBidderName((b as any)?.teams?.name ?? null);
+      const teamId = (b as any)?.team_id ? String((b as any).team_id) : null;
       // @ts-ignore
-      setHighestBidderTeamId((b as any)?.team_id ?? null);
-    } else {
-      setCurrentBid(null);
-      setHighestBidderName(null);
-      setHighestBidderTeamId(null);
+      const teamName = (b as any)?.teams?.name ?? null;
+      setHasCurrentBids(amount !== null);
+      if (pending && pending.playerId === pid) {
+        const expected = Number(pending.amount ?? 0);
+        if (amount === null || amount < expected) {
+          return { amount, teamId } as const;
+        }
+        pendingBidRef.current = null;
+      }
+      setCurrentBid(amount);
+      setHighestBidderName(teamName);
+      setHighestBidderTeamId(teamId);
+      return { amount, teamId } as const;
     }
+    if (pending && pending.playerId === pid) {
+      return { amount: null, teamId: null } as const;
+    }
+    setCurrentBid(null);
+    setHighestBidderName(null);
+    setHighestBidderTeamId(null);
+    setHasCurrentBids(false);
+    return { amount: null, teamId: null } as const;
   }
 
   useEffect(() => {
@@ -445,10 +572,20 @@ export default function AuctionConsolePage() {
           return (a?.ord ?? 0) - (b?.ord ?? 0);
         }) ?? []);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_strategies' }, (payload) => {
+        if ((payload.new as any)?.player_id === player?.id || (payload.old as any)?.player_id === player?.id) {
+          fetchStrategy();
+        }
+      })
       .subscribe();
     channelRef.current = channel;
     return () => { try { supabase.removeChannel(channel); } catch {} if (channelRef.current === channel) channelRef.current = null; if (bidsRefreshTimerRef.current) { clearTimeout(bidsRefreshTimerRef.current); bidsRefreshTimerRef.current = null; } };
-  }, [ready, session, auctionId]);
+  }, [ready, session, auctionId, player?.id, fetchStrategy]);
+
+  useEffect(() => {
+    // Fetch strategy for current player if the user is a rep/admin
+    fetchStrategy();
+  }, [fetchStrategy]);
 
   const currentSetName = useMemo(() => {
     if (!auction?.current_set_id) return null;
@@ -477,6 +614,11 @@ export default function AuctionConsolePage() {
   }
 
   async function handleNext() {
+    if (!canAdjustQueue) {
+      setToast({ type: 'error', message: 'Auction not started yet.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     if (selectedScope === 'set' && !selectedSetId) {
       setToast({ type: 'error', message: 'Please select a set when using By Set' });
       setTimeout(() => setToast(null), 1800);
@@ -498,9 +640,15 @@ export default function AuctionConsolePage() {
   }
 
   async function handleSold() {
+    if (!auctionIsLive || !player?.id || !hasCurrentBids) {
+      setToast({ type: 'error', message: 'Auction must be live with a bid placed.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     await invoke('sell_player', { auction_id: auctionId, player_id: player?.id });
     // Clear local player immediately; rely on realtime to repopulate queue/state
     setPlayer(null);
+    setAuction(prev => prev ? { ...prev, current_player_id: null } : prev);
     setCurrentBid(null);
     setHighestBidderName(null);
     setHighestBidderTeamId(null);
@@ -508,49 +656,80 @@ export default function AuctionConsolePage() {
   }
 
   async function handleUnsold() {
+    if (!auctionIsLive || !player?.id || hasCurrentBids) {
+      setToast({ type: 'error', message: 'Auction must be live with no bids.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     await invoke('mark_unsold', { auction_id: auctionId, player_id: player?.id });
     setPlayer(null);
+    setAuction(prev => prev ? { ...prev, current_player_id: null } : prev);
     setCurrentBid(null);
     setHighestBidderName(null);
     setHighestBidderTeamId(null);
     scheduleBidRefresh(() => refreshQueueAndPlayer(), 80);
   }
 
-  async function handlePlaceBid(teamId: string) {
-    const nextAmount = computeNextBidAmount();
-    const team = teams.find(t => t.id === teamId);
-    // optimistic UI
-    pendingBidRef.current = { playerId: player?.id, teamId, amount: nextAmount };
-    setCurrentBid(nextAmount);
-    setHighestBidderTeamId(teamId);
-    setHighestBidderName(team?.name ?? highestBidderName);
-    const { error } = (await invoke('place_bid', { auction_id: auctionId, team_id: teamId, player_id: player?.id, amount: nextAmount }));
-    if (error) {
-      // revert optimistic on error
-      pendingBidRef.current = null;
-      await refreshBidState();
+  function handlePlaceBid(teamId: string) {
+    if (!auctionIsLive || !player?.id) {
+      setToast({ type: 'error', message: 'Auction must be live with a player loaded.' });
+      setTimeout(() => setToast(null), 1800);
       return;
     }
-    // fallback in case realtime event is delayed
-    scheduleBidRefresh(() => refreshBidState(), 200);
+    const team = teams.find(t => t.id === teamId);
+    if (!team) {
+      setToast({ type: 'error', message: 'Team unavailable for bidding.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
+    const eligibility = isTeamEligible(team);
+    if (!eligibility.ok) {
+      setToast({ type: 'error', message: eligibility.reason || 'Team not eligible to bid.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
+    bidQueueRef.current.push(teamId);
+    processBidQueue();
   }
 
   async function handleUndoBid() {
+    if (!auctionIsLive || !currentBid) {
+      setToast({ type: 'error', message: 'Auction must be live with a bid placed.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     await invoke('undo_bid', { auction_id: auctionId, player_id: player?.id });
     scheduleBidRefresh(() => refreshBidState(), 120);
   }
 
   async function handleUndoSold() {
+    if (!auctionIsLive || !player?.id) {
+      setToast({ type: 'error', message: 'Auction must be live with a player loaded.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     await invoke('undo_sold', { auction_id: auctionId, player_id: player?.id });
+    setAuction(prev => prev ? { ...prev, current_player_id: null } : prev);
     scheduleBidRefresh(() => refreshQueueAndPlayer(), 120);
   }
 
   async function handleUndoUnsold() {
+    if (!auctionIsLive || !player?.id) {
+      setToast({ type: 'error', message: 'Auction must be live with a player loaded.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     await invoke('undo_unsold', { auction_id: auctionId, player_id: player?.id });
+    setAuction(prev => prev ? { ...prev, current_player_id: null } : prev);
     scheduleBidRefresh(() => refreshQueueAndPlayer(), 120);
   }
 
   async function handleLoadRandomAvailable() {
+    if (!canAdjustQueue) {
+      setToast({ type: 'error', message: 'Auction not started yet.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     const scope = (auction as any)?.queue_scope || 'default';
     let q = supabase
       .from('auction_players')
@@ -566,22 +745,28 @@ export default function AuctionConsolePage() {
     await refreshQueueAndPlayer();
   }
 
-  function computeNextBidAmount() {
-    const base = player?.base_price ? Number(player.base_price) : Number((auction as any)?.base_price ?? 0);
-    const current = currentBid !== null ? Number(currentBid) : null;
-    if (current === null) return base;
-    // find step by threshold
-    let step = 1;
-    if (incRules.length > 0) {
-      const found = incRules.find(r => Number(current) <= Number(r.threshold));
-      step = found ? Number(found.increment) : Number(incRules[incRules.length - 1].increment);
-    }
-    return Number(current) + Number(step);
-  }
+  function computeNextBidAmount(currentOverride?: number | null) {
+     const base = player?.base_price ? Number(player.base_price) : Number((auction as any)?.base_price ?? 0);
+     const current = currentOverride !== undefined ? (currentOverride !== null ? Number(currentOverride) : null) : (currentBid !== null ? Number(currentBid) : null);
+     if (current === null) return base;
+     // find step by threshold
+     let step = 1;
+     if (incRules.length > 0) {
+       const found = incRules.find(r => Number(current) < Number(r.threshold));
+       step = found ? Number(found.increment) : Number(incRules[incRules.length - 1].increment);
+     }
+     return Number(current) + Number(step);
+   }
 
   function isTeamEligible(team: any) {
     if (!player?.id) return { ok: false, reason: 'No player loaded' };
-    if ((auction?.status || '').toLowerCase() !== 'live') return { ok: false, reason: 'Auction not live' };
+    if (String(player?.status || '').toLowerCase() !== 'available') return { ok: false, reason: 'Player not available' };
+    if (!auctionIsLive) {
+      if (auctionIsPaused) return { ok: false, reason: 'Auction is paused' };
+      if (auctionIsClosed) return { ok: false, reason: 'Auction has ended' };
+      if (auctionIsDraft) return { ok: false, reason: 'Auction not started' };
+      return { ok: false, reason: 'Auction unavailable' };
+    }
     const ag = teamAggs[team.id] || { players_count: 0, purse_remaining: 0, spent_total: 0 };
     const maxPlayers = Number(team.max_players ?? 0);
     const remainingSlots = Math.max(maxPlayers - ag.players_count, 0);
@@ -607,6 +792,11 @@ export default function AuctionConsolePage() {
   }
 
   async function handlePauseResume() {
+    if (auctionNotStarted || auctionIsClosed || player?.id) {
+      setToast({ type: 'error', message: auctionNotStarted ? 'Auction has not been opened yet.' : player?.id ? 'Finish the current player before pausing.' : 'Auction has already ended.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     if ((auction?.status || '').toLowerCase() === 'live') {
       await invoke('pause_auction', { auction_id: auctionId });
     } else {
@@ -615,6 +805,11 @@ export default function AuctionConsolePage() {
   }
 
   async function handleCloseAuction() {
+    if (auctionNotStarted || auctionIsClosed || player?.id) {
+      setToast({ type: 'error', message: auctionNotStarted ? 'Auction has not been opened yet.' : auctionIsClosed ? 'Auction already closed.' : 'Finish the current player before closing.' });
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
     const ok = confirm('Close this auction? This action will end the auction.');
     if (!ok) return;
     await invoke('close_auction', { auction_id: auctionId });
@@ -657,6 +852,62 @@ export default function AuctionConsolePage() {
     if (eventFilter === 'bids') return eventsHydrated.filter((e: any) => bidTypes.has(String(e?.type)));
     return eventsHydrated.filter((e: any) => statusTypes.has(String(e?.type)));
   }, [eventsHydrated, eventFilter]);
+
+  async function processBidQueue() {
+    if (placingBidRef.current) return;
+    placingBidRef.current = true;
+    try {
+      while (bidQueueRef.current.length > 0) {
+        const teamId = bidQueueRef.current.shift();
+        if (!teamId) continue;
+        const activePlayerId = player?.id;
+        if (!activePlayerId) { bidQueueRef.current = []; break; }
+        const latest = await refreshBidState(activePlayerId);
+        const nextAmount = computeNextBidAmount(latest.amount ?? null);
+        if (!Number.isFinite(nextAmount)) {
+          pendingBidRef.current = null;
+          await refreshBidState(activePlayerId);
+          continue;
+        }
+        const team = teams.find(t => t.id === teamId);
+        pendingBidRef.current = { playerId: activePlayerId, teamId, amount: nextAmount };
+        setCurrentBid(nextAmount);
+        setHighestBidderTeamId(teamId);
+        setHighestBidderName(team?.name ?? highestBidderName ?? null);
+        const { error } = await invoke('place_bid', { auction_id: auctionId, team_id: teamId, player_id: activePlayerId, amount: nextAmount });
+        if (error) {
+          pendingBidRef.current = null;
+          await refreshBidState(activePlayerId);
+          continue;
+        }
+        let confirmed = false;
+        for (let attempt = 0; attempt < 8 && !confirmed; attempt++) {
+          const latestAfter = await refreshBidState(activePlayerId);
+          const amountAfter = latestAfter.amount != null ? Number(latestAfter.amount) : null;
+          if (amountAfter !== null && amountAfter >= nextAmount) {
+            confirmed = true;
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, 80));
+        }
+        if (!confirmed) {
+          pendingBidRef.current = null;
+          await refreshBidState(activePlayerId);
+        }
+      }
+    } finally {
+      placingBidRef.current = false;
+      if (bidQueueRef.current.length > 0) {
+        processBidQueue();
+      }
+    }
+  }
+
+  useEffect(() => {
+    bidQueueRef.current = [];
+    placingBidRef.current = false;
+    setHasCurrentBids(Boolean(player?.id ? currentBid !== null : false));
+  }, [player?.id]);
 
   return (
     <div className="text-white" style={{ fontFamily: 'Spline Sans, Noto Sans, sans-serif', backgroundColor: '#110f22', height: 'calc(100vh - 79px)' }}>
@@ -740,6 +991,29 @@ export default function AuctionConsolePage() {
                         <div className="text-xs text-gray-500">Strike Rate</div>
                         <div className="font-semibold text-gray-800">{fmtNumber(player?.strike_rate, 2)}</div>
                       </div>
+                      {(role === 'admin' || role === 'team_rep') && player?.id && (
+                          currentStrategy ? (
+                            <div className="rounded-lg border border-gray-200 bg-white p-3">
+                              <div>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                  <div>
+                                    <div className="text-xs text-gray-500">Interest</div>
+                                    <div className="font-semibold text-gray-800 capitalize">{currentStrategy.interest}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500">Max Bid</div>
+                                    <div className="font-semibold text-gray-800">{fmtCurrency(currentStrategy.max_bid)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="rounded-lg border border-gray-200 bg-white p-3">
+                              <div className="text-xs text-gray-500">Strategy</div>
+                              <div className="font-semibold text-gray-800">N/A</div>
+                            </div>
+                          )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -828,9 +1102,41 @@ export default function AuctionConsolePage() {
                       </div>
                   </div>
                 </div>
-              <div className={`rounded-2xl bg-white ${compactMode ? 'p-4' : 'p-6'} shadow-lg`}>
+                {(role === 'admin' || role === 'team_rep') && player?.id && (
+                  <div className={`rounded-2xl bg-white ${compactMode ? 'p-4' : 'p-6'} shadow-lg hidden`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-gray-800">Your Strategy</h3>
+                      {role === 'admin' && highestBidderName && (
+                        <span className="text-xs font-semibold text-gray-500">For: {highestBidderName}</span>
+                      )}
+                    </div>
+                    {currentStrategy ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <div className="text-xs text-gray-500">Interest</div>
+                            <div className="font-semibold text-gray-800 capitalize">{currentStrategy.interest}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500">Max Bid</div>
+                            <div className="font-semibold text-gray-800">{fmtCurrency(currentStrategy.max_bid)}</div>
+                          </div>
+                        </div>
+                        {currentStrategy.notes && (
+                          <div className="mt-4">
+                            <div className="text-xs text-gray-500">Notes</div>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{currentStrategy.notes}</p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-sm text-gray-500">No strategy set for this player.</div>
+                    )}
+                  </div>
+                )}
+                <div className={`rounded-2xl bg-white ${compactMode ? 'p-4' : 'p-6'} shadow-lg`}>
                   <h3 className="mb-4 text-xl font-bold text-gray-800">Bidding Actions</h3>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 items-stretch">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 items-stretch">
                     {teams.slice(0, 8).map((t) => {
                       const elig = isTeamEligible(t);
                       const nextAmt = computeNextBidAmount();
@@ -840,7 +1146,13 @@ export default function AuctionConsolePage() {
                       const acquiredDisplay = `${acquired}/${maxPlayersRaw !== null ? Number(maxPlayersRaw) : '—'}`;
                       const maxNextBid = computeMaxAllowedForTeam(t.id);
                       return (
-                      <button key={t.id} onClick={() => handlePlaceBid(t.id)} disabled={!elig.ok} className={`relative flex h-full min-h-[100px] flex-col items-center justify-between rounded-lg p-2 text-white shadow-md transition-all ${elig.ok ? 'bg-[var(--ucl-pink)] hover:bg-opacity-90' : 'bg-gray-300 cursor-not-allowed'}`}>
+                        <button
+                          key={t.id}
+                          onClick={() => handlePlaceBid(t.id)}
+                          disabled={!elig.ok}
+                          title={elig.ok ? 'Place bid' : elig.reason}
+                          className={`relative flex h-full min-h-[100px] flex-col items-center justify-between rounded-lg p-2 text-white shadow-md transition-all ${elig.ok ? 'bg-[var(--ucl-pink)] hover:bg-opacity-90' : 'bg-gray-300 cursor-not-allowed'}`}
+                        >
                           {(() => {
                             const raw = String(t.name || '').trim();
                             const parts = raw.split(/\s+/);
@@ -855,11 +1167,11 @@ export default function AuctionConsolePage() {
                               <span className="font-semibold align-middle">{fmtCurrency(nextAmt)}</span>
                             </div>
                             <div className="flex items-center justify-end gap-1 text-right">
-                            <span className="font-semibold align-middle">{fmtCurrency(ag.purse_remaining)}</span>
+                              <span className="font-semibold align-middle">{fmtCurrency(ag.purse_remaining)}</span>
                               <span className="material-symbols-outlined text-white/80 inline-block align-middle" style={{ fontSize: '16px' }}>savings</span>
                             </div>
                             <div className="flex items-center justify-start gap-1 text-left">
-                            <span className="material-symbols-outlined text-white/80 inline-block align-middle" style={{ fontSize: '16px' }} >group</span>
+                              <span className="material-symbols-outlined text-white/80 inline-block align-middle" style={{ fontSize: '16px' }}>group</span>
                               <span className="font-semibold align-middle">{acquiredDisplay}</span>
                             </div>
                             <div className="flex items-center justify-end gap-1 text-right">
@@ -883,26 +1195,31 @@ export default function AuctionConsolePage() {
                   <div className="grid grid-cols-3 gap-3">
                     {(role === 'admin' || role === 'auctioneer') ? (
                       <>
-                        <button onClick={handleSold} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-green-500 px-4 text-sm font-bold text-white transition-colors hover:bg-green-600`}>
+                        <button onClick={handleSold} disabled={!auctionIsLive || !player?.id || !hasCurrentBids}
+                          className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${(auctionIsLive && player?.id && hasCurrentBids) ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
                           <span className="material-symbols-outlined text-base">gavel</span>
                           <span>Sold</span>
                         </button>
-                        <button onClick={handleUnsold} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-red-500 px-4 text-sm font-bold text-white transition-colors hover:bg-red-600`}>
+                        <button onClick={handleUnsold} disabled={!auctionIsLive || !player?.id || hasCurrentBids}
+                          className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${(auctionIsLive && player?.id && !hasCurrentBids) ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
                           <span className="material-symbols-outlined text-base">do_not_disturb_on</span>
                           <span>Unsold</span>
                         </button>
                         {player?.status === 'sold' ? (
-                          <button onClick={handleUndoSold} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-gray-400 px-4 text-sm font-bold text_white transition-colors hover:bg-gray-500`}>
+                          <button onClick={handleUndoSold} disabled={!auctionIsLive || !player?.id}
+                            className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${auctionIsLive && player?.id ? 'bg-gray-400 text-white hover:bg-gray-500' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
                             <span className="material-symbols-outlined text-base">undo</span>
                             <span>Undo Sold</span>
                           </button>
                         ) : player?.status === 'unsold' ? (
-                          <button onClick={handleUndoUnsold} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-gray-400 px-4 text-sm font-bold text_white transition-colors hover:bg-gray-500`}>
+                          <button onClick={handleUndoUnsold} disabled={!auctionIsLive || !player?.id}
+                            className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${auctionIsLive && player?.id ? 'bg-gray-400 text-white hover:bg-gray-500' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
                             <span className="material-symbols-outlined text-base">undo</span>
                             <span>Undo Unsold</span>
                           </button>
                         ) : (
-                          <button onClick={handleUndoBid} disabled={!currentBid} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-gray-400 px-4 text-sm font-bold text_white transition-colors hover:bg-gray-500 disabled:opacity-50`}>
+                          <button onClick={handleUndoBid} disabled={!auctionIsLive || !currentBid}
+                            className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${(auctionIsLive && currentBid) ? 'bg-gray-400 text-white hover:bg-gray-500' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
                             <span className="material-symbols-outlined text-base">undo</span>
                             <span>Undo Bid</span>
                           </button>
@@ -915,16 +1232,21 @@ export default function AuctionConsolePage() {
                   {(role === 'admin' || role === 'auctioneer') && (
                     <div className="mt-4 grid grid-cols-3 gap-3">
                       {(auction?.status || '').toLowerCase() === 'draft' && (
-                        <button onClick={handleOpenAuction} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-green-700 px-4 text-sm font-bold text-white transition-colors hover:bg-green-800`}>
+                        <button onClick={handleOpenAuction}
+                          className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-green-700 px-4 text-sm font-bold text-white transition-colors hover:bg-green-800`}>
                           <span className="material-symbols-outlined text-base">play_arrow</span>
                           <span>Start/Open</span>
                         </button>
                       )}
-                      <button onClick={handlePauseResume} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-yellow-500 px-4 text-sm font-bold text-white transition-colors hover:bg-yellow-600`}>
+                      <button onClick={handlePauseResume}
+                        className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg ${(!auctionIsClosed && !auctionNotStarted && !player?.id) ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} px-4 text-sm font-bold transition-colors`}
+                        disabled={auctionIsClosed || auctionNotStarted || Boolean(player?.id)}>
                         <span className="material-symbols-outlined text-base">{(auction?.status || '').toLowerCase() === 'live' ? 'pause' : 'play_arrow'}</span>
                         <span>{(auction?.status || '').toLowerCase() === 'live' ? 'Pause' : 'Resume'}</span>
                       </button>
-                      <button onClick={handleCloseAuction} className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg bg-gray-700 px-4 text-sm font-bold text-white transition-colors hover:bg-gray-800`}>
+                      <button onClick={handleCloseAuction}
+                        className={`flex ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${(!auctionIsClosed && !auctionNotStarted && !player?.id) ? 'bg-gray-700 text-white hover:bg-gray-800' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                        disabled={auctionIsClosed || auctionNotStarted || Boolean(player?.id)}>
                         <span className="material-symbols-outlined text-base">stop_circle</span>
                         <span>Close</span>
                       </button>
@@ -936,20 +1258,34 @@ export default function AuctionConsolePage() {
                   <h3 className="mb-4 text-xl font-bold text-gray-800">Player &amp; Set Selection</h3>
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      <select className={`${compactMode ? 'h-10' : 'h-11'} w-full rounded-lg border border-gray-300 bg-white text-gray-700 px-4 text-sm shadow-sm transition-colors focus:border-pink-500 focus:ring-pink-500 hover:border-gray-400`} value={selectedScope} onChange={e => setSelectedScope(e.target.value as any)}>
+                      <select
+                        className={`${compactMode ? 'h-10' : 'h-11'} w-full rounded-lg border border-gray-300 bg-white text-gray-700 px-4 text-sm shadow-sm transition-colors focus:border-pink-500 focus:ring-pink-500 hover:border-gray-400 ${!canAdjustQueue ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        value={selectedScope}
+                        onChange={e => setSelectedScope(e.target.value as any)}
+                        disabled={!canAdjustQueue}
+                      >
                         <option value="default">All (Default)</option>
                         <option value="unsold">Unsold</option>
                         <option value="set">By Set</option>
                       </select>
                       <div className="space-y-1">
-                        <select className={`${compactMode ? 'h-10' : 'h-11'} w-full rounded-lg border ${selectedScope === 'set' && !selectedSetId ? 'border-red-300' : 'border-gray-300'} bg-white px-4 text-sm text-gray-700 shadow-sm transition-colors focus:border-pink-500 focus:ring-pink-500 hover:border-gray-400 ${selectedScope === 'set' ? '' : 'opacity-50'}`} value={selectedSetId} onChange={e => setSelectedSetId(e.target.value)} disabled={selectedScope !== 'set'}>
+                        <select
+                          className={`${compactMode ? 'h-10' : 'h-11'} w-full rounded-lg border ${selectedScope === 'set' && !selectedSetId ? 'border-red-300' : 'border-gray-300'} bg-white px-4 text-sm text-gray-700 shadow-sm transition-colors focus:border-pink-500 focus:ring-pink-500 hover:border-gray-400 ${(selectedScope === 'set' && canAdjustQueue) ? '' : 'opacity-50'}`}
+                          value={selectedSetId}
+                          onChange={e => setSelectedSetId(e.target.value)}
+                          disabled={selectedScope !== 'set' || !canAdjustQueue}
+                        >
                           <option value="">— Select Set —</option>
                           {sets.map(s => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                           ))}
                         </select>
                       </div>
-                      <button className={`${compactMode ? 'h-10' : 'h-11'} whitespace-nowrap rounded-lg bg-gray-200 px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-300`} onClick={applySetSelection}>
+                      <button
+                        className={`${compactMode ? 'h-10' : 'h-11'} whitespace-nowrap rounded-lg px-4 text-sm font-bold transition-colors ${canAdjustQueue ? 'bg-[var(--ucl-pink)] text-white hover:bg-pink-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                        onClick={applySetSelection}
+                        disabled={!canAdjustQueue}
+                      >
                         Apply
                       </button>
                     </div>
@@ -958,17 +1294,19 @@ export default function AuctionConsolePage() {
                     )}
                     <div className="relative player-search">
                       <input
-                        className={`${compactMode ? 'h-10' : 'h-11'} w-full rounded-lg border border-gray-300 bg-white text-gray-700 px-4 pr-10 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:border-pink-500 focus:ring-pink-500 hover:border-gray-400`}
+                        className={`${compactMode ? 'h-10' : 'h-11'} w-full rounded-lg border border-gray-300 bg-white text-gray-700 px-4 pr-10 text-sm shadow-sm transition-colors placeholder:text-gray-400 focus:border-pink-500 focus:ring-pink-500 hover:border-gray-400 ${!canAdjustQueue ? 'opacity-60 cursor-not-allowed' : ''}`}
                         placeholder="Search for a player"
                         type="text"
                         value={searchTerm}
+                        disabled={!canAdjustQueue}
                         onChange={async (e) => {
                           const val = e.target.value;
                           setSearchTerm(val);
+                          if (!canAdjustQueue) return;
                           setShowSearchResults(true);
                           await searchPlayersByName(val.trim());
                         }}
-                        onFocus={() => { if (searchTerm.length >= 2) setShowSearchResults(true); }}
+                        onFocus={() => { if (canAdjustQueue && searchTerm.length >= 2) setShowSearchResults(true); }}
                         onKeyDown={async (e) => {
                           if (e.key === 'Enter') {
                             const val = (e.target as HTMLInputElement).value.trim();
@@ -976,31 +1314,41 @@ export default function AuctionConsolePage() {
                           }
                         }}
                       />
-                      <button type="button" onClick={async () => {
-                        if (showSearchResults) {
-                          setShowSearchResults(false);
-                          return;
-                        }
-                        setShowSearchResults(true);
-                        setSearchTerm('');
-                        // Load up to 200 players in current scope (available only when scope default/set; otherwise unsold scope returns unsold)
-                        const scope = (auction as any)?.queue_scope || 'default';
-                        let q = supabase.from('auction_players').select('id,name,status,set_id,photo_path,photo_url').eq('auction_id', auctionId);
-                        if (scope === 'unsold') q = q.eq('status', 'unsold');
-                        else q = q.eq('status', 'available');
-                        if (scope === 'set' && (auction as any)?.current_set_id) q = q.eq('set_id', (auction as any).current_set_id);
-                        const { data } = await q.order('name', { ascending: true }).limit(200);
-                        setSearchResults((data as any[]) ?? []);
-                      }} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <button
+                        type="button"
+                        disabled={!canAdjustQueue}
+                        onClick={async () => {
+                          if (!canAdjustQueue) return;
+                          if (showSearchResults) {
+                            setShowSearchResults(false);
+                            return;
+                          }
+                          setShowSearchResults(true);
+                          setSearchTerm('');
+                          const scope = (auction as any)?.queue_scope || 'default';
+                          let q = supabase.from('auction_players').select('id,name,status,set_id,photo_path,photo_url').eq('auction_id', auctionId);
+                          if (scope === 'unsold') q = q.eq('status', 'unsold');
+                          else q = q.eq('status', 'available');
+                          if (scope === 'set' && (auction as any)?.current_set_id) q = q.eq('set_id', (auction as any).current_set_id);
+                          const { data } = await q.order('name', { ascending: true }).limit(200);
+                          setSearchResults((data as any[]) ?? []);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-[38%] text-gray-400"
+                      >
                         <span className="material-symbols-outlined">person_search</span>
                       </button>
                       {showSearchResults && (
-                        <div className="absolute z-20 mt-1 w-full max-h-64 overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                        <div className="absolute z-20 bottom-[44px] w-full max-h-64 overflow-auto rounded-md border border-gray-200 bg-white shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1),_0_-4px_6px_-4px_rgba(0,0,0,0.1)]">
                           {searchResults.length > 0 ? (
                             searchResults.map((row: any, idx: number) => {
                               const avatar = row.photo_path ? supabase.storage.from('player-photos').getPublicUrl(row.photo_path).data.publicUrl : (row.photo_url || '');
                               return (
-                                <button key={row.id} onMouseDown={(e) => e.preventDefault()} onClick={() => handlePickPlayer(row.id)} className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-gray-50">
+                                <button
+                                  key={row.id}
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => handlePickPlayer(row.id)}
+                                  className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-gray-50"
+                                >
                                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-gray-700 text-[10px] font-semibold border border-gray-200">{idx + 1}</span>
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB5Rt3w77zCG5sJKcIMwVhTmNzFovQ6x69tQVlpYkWEE06iBaC5sERYq4Oun5Y2TTHvud0_gg39APZqOEQmkxm5ccN6jrVpqrdEY5N3DxEmpU-uKEOATivEXW4wRn5ZRzETsAYX-z0UGtDKxZskB6k0UYUVM7XbWfKdbhhLWv1rD-wipAqEtWmLfJwMGbEDWIoSoi99hw2VRfFtUfGMFAXIzGCKU4KXKchUIONLFp_XoXTgblxGbBkFt09H4jdOYd4pwa6G4oFK48o'} alt="avatar" className="h-6 w-6 rounded-full object-cover" />
@@ -1020,22 +1368,22 @@ export default function AuctionConsolePage() {
                         </div>
                       )}
                     </div>
-                  <div className="flex items-center justify-end">
-                    <button
-                      onClick={handleLoadRandomAvailable}
-                      disabled={!hasPlayersInScope}
-                      className={`mt-2 flex w-full ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${hasPlayersInScope ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-                      title={hasPlayersInScope ? '' : ((auction as any)?.queue_scope || 'default') === 'set' ? 'No more players available for auction in the current set' : 'No more players available for auction in the current scope'}
-                    >
-                      <span className="material-symbols-outlined text-base">shuffle</span>
-                      <span>Load Next Random Player</span>
-                      {!hasPlayersInScope && (
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs" title={((auction as any)?.queue_scope || 'default') === 'set' ? 'No more players available for auction in the current set' : 'No more players available for auction in the current scope'}>
-                          <span className="material-symbols-outlined text-red-500/90">info</span>
-                        </span>
-                      )}
-                    </button>
-                  </div>
+                    <div className="flex items-center justify-end">
+                      <button
+                        onClick={handleLoadRandomAvailable}
+                        disabled={!hasPlayersInScope || !canAdjustQueue}
+                        className={`mt-2 flex w-full ${compactMode ? 'h-10' : 'h-11'} items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors ${hasPlayersInScope && canAdjustQueue ? 'bg-purple-800 text-white hover:bg-purple-900' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                        title={!canAdjustQueue ? 'Auction not started yet' : hasPlayersInScope ? '' : ((auction as any)?.queue_scope || 'default') === 'set' ? 'No more players available for auction in the current set' : 'No more players available for auction in the current scope'}
+                      >
+                        <span className="material-symbols-outlined text-base">shuffle</span>
+                        <span>Load Next Random Player</span>
+                        {!hasPlayersInScope && (
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs" title={((auction as any)?.queue_scope || 'default') === 'set' ? 'No more players available for auction in the current set' : 'No more players available for auction in the current scope'}>
+                            <span className="material-symbols-outlined text-red-500/90">info</span>
+                          </span>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

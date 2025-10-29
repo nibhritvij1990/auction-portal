@@ -1,12 +1,5 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function LoginAlias() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/auth/sign-in');
-  }, [router]);
-  return null;
+export default function Page() {
+  redirect('/dashboard');
 } 

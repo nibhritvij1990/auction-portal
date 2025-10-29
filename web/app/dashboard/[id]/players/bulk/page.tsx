@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '../../../../../lib/supabaseClient';
 import { useAuthReady } from '../../../../../lib/useAuthReady';
+import ManagePageLayout from '../../../../../components/ManagePageLayout';
 
 export default function PlayersBulkPage() {
   const params = useParams();
@@ -307,15 +308,19 @@ export default function PlayersBulkPage() {
   }
 
   return (
-    <main className="flex-1 bg-gray-50 py-12">
-      <div className="container mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-6 text-3xl font-bold tracking-tight text-gray-900">Players Bulk</h2>
+    <ManagePageLayout>
+      <div className="space-y-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Players Bulk Operations</h2>
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          {/* Bulk Add/Edit */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-gray-800">Bulk Add/Edit (Upsert)</h3>
-            <p className="mb-3 text-sm text-gray-600">Upload JSON or CSV. CSV headers supported: name, base_price, category, status, set_id, set_name, bat_style, bowl_style, matches, runs, average, strike_rate, overs, wickets, economy, notes. If set_id is not provided, set_name will be mapped automatically.</p>
-            <div className="mb-2 flex items-center gap-3">
-              <label className="rounded border border-gray-300 px-3 py-1 text-sm">
+            <p className="mb-4 text-sm text-gray-600">Upload JSON or CSV. CSV headers supported: name, base_price, category, status, set_id, set_name, bat_style, bowl_style, matches, runs, average, strike_rate, overs, wickets, economy, notes. If set_id is not provided, set_name will be mapped automatically.</p>
+            <div className="mb-3 flex items-center gap-3">
+              <label className="cursor-pointer rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 <input type="file" accept=".csv" className="hidden" onChange={async (e) => {
                   const f = e.target.files?.[0]; if (!f) return; const text = await f.text();
                   const rows = parseCsv(text);
@@ -329,11 +334,11 @@ export default function PlayersBulkPage() {
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = `players_${auctionId}.csv`; a.click(); URL.revokeObjectURL(url);
-              }} className="rounded border border-gray-300 px-3 py-1 text-sm">Export CSV</button>
+              }} className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Export CSV</button>
             </div>
-            <textarea className="h-64 w-full rounded border border-gray-300 p-3 font-mono text-sm" value={jsonText} onChange={e => setJsonText(e.target.value)} />
-            <div className="mt-3 flex items-center gap-3">
-              <button onClick={handleUpsert} disabled={loading} className="rounded-full bg-pink-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">{loading ? 'Working…' : 'Upsert'}</button>
+            <textarea className="h-64 w-full rounded-lg border border-gray-300 p-3 font-mono text-sm text-gray-900 focus:border-pink-500 focus:ring-pink-500" value={jsonText} onChange={e => setJsonText(e.target.value)} />
+            <div className="mt-4 flex items-center gap-3">
+              <button onClick={handleUpsert} disabled={loading} className="rounded-full bg-pink-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-700 disabled:opacity-50">{loading ? 'Working…' : 'Upsert Players'}</button>
               <button onClick={async () => {
                 const { data } = await supabase
                   .from('auction_players')
@@ -341,30 +346,29 @@ export default function PlayersBulkPage() {
                   .eq('auction_id', auctionId)
                   .order('created_at', { ascending: false });
                 setJsonText(JSON.stringify(data ?? [], null, 2));
-              }} className="rounded-full border border-gray-300 px-6 py-2 text-sm">Export JSON</button>
-              <button onClick={() => router.back()} className="rounded-full border border-gray-300 px-6 py-2 text-sm">Back</button>
+              }} className="rounded-full border border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50">Export All as JSON</button>
             </div>
             {report && (() => {
               const total = report.rows.length;
               const errors = report.rows.filter(r => r.status === 'error').length;
               const oks = total - errors;
               return (
-                <div className="mt-3 rounded border border-gray-200 bg-gray-50 p-3 text-sm">
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm">
                   <div className="mb-2 flex items-center justify-between">
-                    <div className="font-semibold">Validation Report</div>
+                    <div className="font-semibold text-gray-800">Validation Report</div>
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">OK: {oks}</span>
-                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">Errors: {errors}</span>
-                      <button type="button" onClick={() => setReportOpen(s => !s)} className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100">
-                        {reportOpen ? 'Hide details' : 'Show details'}
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">OK: {oks}</span>
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">Errors: {errors}</span>
+                      <button type="button" onClick={() => setReportOpen(s => !s)} className="rounded-md border border-gray-300 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-100">
+                        {reportOpen ? 'Hide' : 'Details'}
                       </button>
                     </div>
                   </div>
                   {reportOpen && (
-                    <ul className="space-y-1">
+                    <ul className="mt-2 space-y-1 text-xs">
                       {report.rows.map((r, idx) => (
                         <li key={idx} className={r.status === 'ok' ? 'text-green-700' : 'text-red-700'}>
-                          Row {r.index + 1}: {r.status === 'ok' ? 'ok' : r.error}
+                          Row {r.index + 1}: {r.status === 'ok' ? 'OK' : r.error}
                         </li>
                       ))}
                     </ul>
@@ -373,74 +377,75 @@ export default function PlayersBulkPage() {
               );
             })()}
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          
+          {/* Bulk Delete */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-gray-800">Bulk Delete</h3>
-            <p className="mb-3 text-sm text-gray-600">Upload a JSON array with either id or name for each player to delete.</p>
-            <textarea className="h-64 w-full rounded border border-gray-300 p-3 font-mono text-sm" value={deleteText} onChange={e => setDeleteText(e.target.value)} />
-            <div className="mt-3 flex items-center gap-3">
-              <button onClick={handleDelete} disabled={loading} className="rounded-full bg-red-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">{loading ? 'Working…' : 'Delete'}</button>
-              <button onClick={() => { setDeleteText('[]'); }} className="rounded-full border border-gray-300 px-6 py-2 text-sm">Clear</button>
+            <p className="mb-4 text-sm text-gray-600">Provide a JSON array with either an `id` or `name` for each player to delete.</p>
+            <textarea className="h-64 w-full rounded-lg border border-gray-300 p-3 font-mono text-sm text-gray-900 focus:border-pink-500 focus:ring-pink-500" value={deleteText} onChange={e => setDeleteText(e.target.value)} />
+            <div className="mt-4 flex items-center gap-3">
+              <button onClick={handleDelete} disabled={loading} className="rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-red-700 disabled:opacity-50">{loading ? 'Working…' : 'Delete Players'}</button>
+              <button onClick={() => { setDeleteText('[\n  { "id": "<player_id>" }\n]'); }} className="rounded-full border border-gray-600 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50">Reset</button>
             </div>
           </div>
         </div>
+
         {/* Bulk Images */}
-        <div className="mt-8 grid grid-cols-1 gap-8">
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-1 text-lg font-semibold text-gray-800">Bulk Images (CSV + Files)</h3>
-            <p className="mb-4 text-sm text-gray-600">Provide a CSV with headers: <code>player_name,image_filename</code>. Then select all image files. We will validate and upload to storage, updating each player's photo.</p>
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-              <label className="rounded border border-gray-300 px-3 py-1 text-sm">
-                <input type="file" accept=".csv" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const text = await f.text(); setImgCsvText(text); }} />
-                Import mapping CSV
-              </label>
-              <label className="rounded border border-gray-300 px-3 py-1 text-sm">
-                <input multiple type="file" accept="image/*" className="hidden" onChange={(e) => { const files = Array.from(e.target.files || []); setImgFiles(files); }} />
-                Select images
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-700">
-                <input type="checkbox" checked={imgOnlyFillMissing} onChange={(e) => setImgOnlyFillMissing(e.target.checked)} />
-                Only fill missing (do not overwrite existing)
-              </label>
-            </div>
-            <textarea className="h-40 w-full rounded border border-gray-300 p-3 font-mono text-sm" value={imgCsvText} onChange={e => setImgCsvText(e.target.value)} />
-            <div className="mt-3 flex items-center gap-3">
-              <button onClick={validateImageMappings} disabled={imgValidating} className="rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">{imgValidating ? 'Validating…' : 'Validate mappings'}</button>
-              <button onClick={handleBulkImageUpload} disabled={imgUploading || imgMappings.filter(m => m.status === 'ok').length === 0} className="rounded-full bg-green-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">{imgUploading ? `Uploading ${imgProgress.done}/${imgProgress.total}…` : 'Upload images'}</button>
-              <span className="text-xs text-gray-500">{imgFiles.length} files selected</span>
-            </div>
-            {imgMappings.length > 0 && (
-              <div className="mt-4 overflow-auto rounded border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Player</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Filename</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Status</th>
-                      <th className="px-3 py-2 text-left font-semibold text-gray-700">Note</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {imgMappings.map((m, i) => (
-                      <tr key={i} className={m.status === 'error' ? 'bg-red-50' : ''}>
-                        <td className="px-3 py-2 text-gray-800">{m.player_name}</td>
-                        <td className="px-3 py-2 text-gray-600">{m.image_filename}</td>
-                        <td className="px-3 py-2">
-                          {m.status === 'ok' && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">ok</span>}
-                          {m.status === 'pending' && <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-700">pending</span>}
-                          {m.status === 'error' && <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">error</span>}
-                        </td>
-                        <td className="px-3 py-2 text-xs text-gray-600">{m.error || (m.hasExistingPhoto && imgOnlyFillMissing ? 'has existing photo' : '')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <h3 className="mb-1 text-lg font-semibold text-gray-800">Bulk Images (CSV + Files)</h3>
+          <p className="mb-4 text-sm text-gray-600">Provide a CSV with headers: <code>player_name,image_filename</code>. Then select all image files. We will validate and upload to storage, updating each player's photo.</p>
+          <div className="mb-4 flex flex-wrap items-center gap-4">
+            <label className="cursor-pointer rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              <input type="file" accept=".csv" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const text = await f.text(); setImgCsvText(text); }} />
+              Import mapping CSV
+            </label>
+            <label className="cursor-pointer rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              <input multiple type="file" accept="image/*" className="hidden" onChange={(e) => { const files = Array.from(e.target.files || []); setImgFiles(files); }} />
+              Select images ({imgFiles.length} selected)
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500" checked={imgOnlyFillMissing} onChange={(e) => setImgOnlyFillMissing(e.target.checked)} />
+              Only fill missing (do not overwrite existing)
+            </label>
           </div>
+          <textarea className="h-40 w-full rounded-lg border border-gray-300 p-3 font-mono text-sm text-gray-900 focus:border-pink-500 focus:ring-pink-500" value={imgCsvText} onChange={e => setImgCsvText(e.target.value)} />
+          <div className="mt-4 flex items-center gap-3">
+            <button onClick={validateImageMappings} disabled={imgValidating} className="rounded-full bg-pink-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-700 disabled:opacity-50">{imgValidating ? 'Validating…' : 'Validate Mappings'}</button>
+            <button onClick={handleBulkImageUpload} disabled={imgUploading || imgMappings.filter(m => m.status === 'ok').length === 0} className="rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-green-700 disabled:opacity-50">{imgUploading ? `Uploading ${imgProgress.done}/${imgProgress.total}…` : `Upload ${imgMappings.filter(m => m.status === 'ok').length} Images`}</button>
+          </div>
+          {imgMappings.length > 0 && (
+            <div className="mt-4 overflow-auto rounded-lg border border-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Player</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Filename</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-700">Note</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {imgMappings.map((m, i) => (
+                    <tr key={i} className={m.status === 'error' ? 'bg-red-50' : ''}>
+                      <td className="px-4 py-2 text-gray-800">{m.player_name}</td>
+                      <td className="px-4 py-2 text-gray-600">{m.image_filename}</td>
+                      <td className="px-4 py-2">
+                        {m.status === 'ok' && <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Ready</span>}
+                        {m.status === 'pending' && <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">Pending</span>}
+                        {m.status === 'error' && <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Error</span>}
+                      </td>
+                      <td className="px-4 py-2 text-xs text-gray-600">{m.error || (m.hasExistingPhoto && imgOnlyFillMissing ? 'Has existing photo' : '')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-        {message && <p className="mt-6 text-sm text-gray-700">{message}</p>}
+        
+        {message && <div className="rounded-lg bg-blue-50 p-4 text-center text-sm text-blue-800">{message}</div>}
       </div>
-    </main>
+    </ManagePageLayout>
   );
 }
 

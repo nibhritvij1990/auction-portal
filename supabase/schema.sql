@@ -290,11 +290,17 @@ create policy auctions_insert_same_org on public.auctions for insert with check 
 create policy auctions_update_same_org on public.auctions for update using (org_id = fn_current_org_id());
 create policy auctions_delete_same_org on public.auctions for delete using (org_id = fn_current_org_id());
 
+-- Allow public read access for auctions
+create policy auctions_select_public on public.auctions for select to anon using (true);
+
 -- Teams
 create policy teams_select_same_org on public.teams for select using (org_id = fn_current_org_id());
 create policy teams_insert_same_org on public.teams for insert with check (org_id = fn_current_org_id());
 create policy teams_update_same_org on public.teams for update using (org_id = fn_current_org_id());
 create policy teams_delete_same_org on public.teams for delete using (org_id = fn_current_org_id());
+
+-- Allow public read access for teams
+create policy teams_select_public on public.teams for select to anon using (true);
 
 -- Players
 create policy players_select_same_org on public.players for select using (org_id = fn_current_org_id());
@@ -315,6 +321,9 @@ create policy sets_update_same_org on public.auction_sets for update using (
 create policy sets_delete_same_org on public.auction_sets for delete using (
   exists(select 1 from public.auctions a where a.id = auction_sets.auction_id and a.org_id = fn_current_org_id())
 );
+
+-- Allow public read access for auction_sets
+create policy sets_select_public on public.auction_sets for select to anon using (true);
 
 -- Player sets (via set -> auction -> org)
 create policy playersets_select_same_org on public.player_sets for select using (
@@ -337,6 +346,9 @@ create policy incrules_cud_same_org on public.increment_rules for all using (
   exists(select 1 from public.auctions a where a.id = increment_rules.auction_id and a.org_id = fn_current_org_id())
 );
 
+-- Allow public read access for increment_rules
+create policy incrules_select_public on public.increment_rules for select to anon using (true);
+
 -- Bids
 create policy bids_select_same_org on public.bids for select using (
   exists(select 1 from public.auctions a where a.id = bids.auction_id and a.org_id = fn_current_org_id())
@@ -345,6 +357,9 @@ create policy bids_insert_same_org on public.bids for insert with check (
   exists(select 1 from public.auctions a where a.id = bids.auction_id and a.org_id = fn_current_org_id())
 );
 
+-- Allow public read access for bids
+create policy bids_select_public on public.bids for select to anon using (true);
+
 -- Assignments
 create policy assignments_select_same_org on public.assignments for select using (
   exists(select 1 from public.auctions a where a.id = assignments.auction_id and a.org_id = fn_current_org_id())
@@ -352,6 +367,9 @@ create policy assignments_select_same_org on public.assignments for select using
 create policy assignments_insert_same_org on public.assignments for insert with check (
   exists(select 1 from public.auctions a where a.id = assignments.auction_id and a.org_id = fn_current_org_id())
 );
+
+-- Allow public read access for assignments
+create policy assignments_select_public on public.assignments for select to anon using (true);
 
 -- Events (read-only for org)
 create policy events_select_same_org on public.auction_events for select using (
@@ -452,6 +470,9 @@ create policy sponsors_delete_same_org on public.auction_sponsors for delete usi
   exists(select 1 from public.auctions a where a.id = auction_sponsors.auction_id and a.org_id = fn_current_org_id())
 );
 
+-- Allow public read access for auction_sponsors
+create policy sponsors_select_public on public.auction_sponsors for select to anon using (true);
+
 alter publication supabase_realtime add table public.auction_sponsors;
 
 -- Storage bucket for sponsor logos
@@ -460,3 +481,63 @@ create policy if not exists storage_public_read_sponsorlogos on storage.objects 
 create policy if not exists storage_auth_write_sponsorlogos on storage.objects for insert with check (bucket_id = 'sponsor-logos' and auth.role() = 'authenticated');
 create policy if not exists storage_auth_update_sponsorlogos on storage.objects for update using (bucket_id = 'sponsor-logos' and auth.role() = 'authenticated');
 create policy if not exists storage_auth_delete_sponsorlogos on storage.objects for delete using (bucket_id = 'sponsor-logos' and auth.role() = 'authenticated'); 
+
+-- Team Representatives (many-to-many: users <-> teams)
+create table if not exists public.team_representatives (
+  team_id uuid not null references public.teams (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  auction_id uuid not null references public.auctions (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (team_id, user_id)
+);
+-- Unique constraint: a user can only be a rep for one team per auction
+create unique index if not exists uq_user_auction on public.team_representatives (user_id, auction_id);
+alter table public.team_representatives enable row level security;
+-- RLS: Admins can manage all, users can see their own assignments
+create policy reps_admin_all on public.team_representatives for all using (
+  exists(select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+create policy reps_select_own on public.team_representatives for select using (user_id = auth.uid());
+
+
+-- Team Strategies (private per-team data on players)
+create table if not exists public.team_strategies (
+  team_id uuid not null references public.teams (id) on delete cascade,
+  player_id uuid not null references public.auction_players (id) on delete cascade,
+  interest text not null default 'none' check (interest in ('high','medium','low','none')),
+  max_bid bigint,
+  notes text,
+  updated_at timestamptz not null default now(),
+  primary key (team_id, player_id)
+);
+alter table public.team_strategies enable row level security;
+-- RLS:
+-- Admins can access all strategies
+create policy strategies_admin_all on public.team_strategies for all using (
+  exists(select 1 from public.profiles where id = auth.uid() and role = 'admin')
+);
+-- Team reps can access strategies for their assigned teams
+create policy strategies_reps_own on public.team_strategies for all using (
+  exists(select 1 from public.team_representatives where team_id = team_strategies.team_id and user_id = auth.uid())
+);
+
+-- Realtime publications
+alter publication supabase_realtime add table public.team_representatives;
+alter publication supabase_realtime add table public.team_strategies; 
+
+alter table public.auction_players enable row level security;
+create policy auction_players_select_same_org on public.auction_players for select using (
+  exists(select 1 from public.auctions a where a.id = auction_players.auction_id and a.org_id = fn_current_org_id())
+);
+create policy auction_players_insert_same_org on public.auction_players for insert with check (
+  exists(select 1 from public.auctions a where a.id = auction_players.auction_id and a.org_id = fn_current_org_id())
+);
+create policy auction_players_update_same_org on public.auction_players for update using (
+  exists(select 1 from public.auctions a where a.id = auction_players.auction_id and a.org_id = fn_current_org_id())
+);
+create policy auction_players_delete_same_org on public.auction_players for delete using (
+  exists(select 1 from public.auctions a where a.id = auction_players.auction_id and a.org_id = fn_current_org_id())
+);
+
+-- Allow public read access for auction_players
+create policy auction_players_select_public on public.auction_players for select to anon using (true); 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
+import Link from 'next/link';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -53,48 +54,50 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[url('https://storage.googleapis.com/aida-images/ce8122d2-8b43-4e8c-8515-3b95a828e833.png')] bg-cover bg-center flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white/80 p-8 shadow-lg backdrop-blur-sm">
-        <div className="mb-8 text-center">
-          <img alt="Auction Central" className="mx-auto mb-2 h-32" src="/images/auction-central-3d-03.jpg" />
-          <p className="mt-2 text-gray-600">Sponsored by UCL</p>
-        </div>
+    <div className="flex min-h-screen w-full items-center justify-center bg-[#110f22] p-2">
+      <div className="w-full h-[calc(100vh-1rem)] flex flex-col items-center justify-center bg-[#f9fafb] rounded-2xl">
+        <main className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+          <div className="mb-8 text-center">
+            <img alt="Auction Central" className="mx-auto mb-2 h-32" src="/images/auction-central-3d-03.jpg" />
+            <p className="mt-2 text-gray-600">Sponsored by UCL</p>
+          </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-6">
-            <div>
-              <label className="sr-only" htmlFor="email">Username or Email</label>
-              <input id="email" type="email" placeholder="Username or Email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white/80 px-4 py-3 text-gray-800 shadow-sm placeholder:text-gray-500 transition-all duration-300 ease-in-out focus:border-[#f72585] focus:ring-2 focus:ring-[#f72585]/50" />
-            </div>
-            {mode === 'password' && (
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
               <div>
-                <label className="sr-only" htmlFor="password">Password</label>
-                <input id="password" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-white/80 px-4 py-3 text-gray-800 shadow-sm placeholder:text-gray-500 transition-all duration-300 ease-in-out focus:border-[#f72585] focus:ring-2 focus:ring-[#f72585]/50" />
+                <label className="sr-only" htmlFor="email">Email</label>
+                <input id="email" type="email" placeholder="Email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm placeholder:text-gray-500 transition-all duration-300 ease-in-out focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50" />
               </div>
-            )}
+              {mode === 'password' && (
+                <div>
+                  <label className="sr-only" htmlFor="password">Password</label>
+                  <input id="password" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm placeholder:text-gray-500 transition-all duration-300 ease-in-out focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-4">
+              <button type="submit" disabled={loading} className="w-full rounded-full bg-pink-600 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50">
+                {loading ? 'Please wait…' : 'Login'}
+              </button>
+              <button type="button" className="w-full rounded-full border border-purple-800 bg-purple-800 py-3 text-base font-medium text-white transition-all hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2" onClick={() => setMode(mode === 'password' ? 'magic' : 'password')}>
+                {mode === 'password' ? 'Use Magic Link' : 'Use Password'}
+              </button>
+            </div>
+          </form>
+
+          {message && <div className="mt-6 text-center text-sm font-medium text-pink-600">{message}</div>}
+          
+          <div className="mt-6 text-center text-sm text-gray-500">
+            <Link className="hover:text-pink-600 hover:underline" href="/auth/forgot-password">Forgot password?</Link>
           </div>
 
-          <div className="mt-4 text-xs">
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-700">
-              Mode: {mode === 'password' ? 'Password' : 'Magic link'}
-            </span>
+          <div className="mt-4 text-center text-sm text-gray-500">
+            Don&apos;t have an account?{' '}
+            <Link className="font-semibold text-pink-600 hover:underline" href="/auth/sign-up">Sign Up</Link>
           </div>
-
-          <div className="mt-8 flex flex-col gap-4">
-            <button type="submit" disabled={loading} className="w-full rounded-lg bg-[#f72585] py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[#f72585] focus:ring-offset-2 disabled:opacity-50">
-              {loading ? 'Please wait…' : 'Login'}
-            </button>
-            <button type="button" className="w-full rounded-lg bg-[#7209b7] py-3 text-base font-semibold text-white transition-all duration-300 ease-in-out hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[#7209b7] focus:ring-offset-2" onClick={() => setMode(mode === 'password' ? 'magic' : 'password')}>
-              {mode === 'password' ? 'Use Magic Link' : 'Use Password'}
-            </button>
-          </div>
-        </form>
-
-        {message && <div className="mt-6 text-center text-sm text-gray-700">{message}</div>}
-        <div className="mt-6 text-center">
-          <a className="text-sm text-gray-500 hover:text-[#f72585] hover:underline" href="#">Forgot password?</a>
-        </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 } 

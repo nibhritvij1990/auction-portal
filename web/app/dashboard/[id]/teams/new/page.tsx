@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '../../../../../lib/supabaseClient';
 import { useAuthReady } from '../../../../../lib/useAuthReady';
 import ImageUploader from '../../../../../components/ImageUploader';
+import ManagePageLayout from '../../../../../components/ManagePageLayout';
 
 export default function NewTeamPage() {
   const params = useParams();
@@ -90,9 +92,11 @@ export default function NewTeamPage() {
   }
 
   return (
-    <main className="flex-1 bg-gray-50 py-12">
-      <div className="container mx-auto max-w-screen-md px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-6 text-3xl font-bold tracking-tight text-gray-900">New Team</h2>
+    <ManagePageLayout>
+      <div className="mx-auto max-w-screen-md">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900">New Team</h2>
+        </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
           {!orgId && (
             <p className="mb-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Your profile is not linked to an organization. Add a row in public.profiles for your auth user.</p>
@@ -100,16 +104,16 @@ export default function NewTeamPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Team Name</label>
-              <input className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-pink-500 focus:ring-pink-500" value={name} onChange={e => setName(e.target.value)} required />
+              <input className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 focus:border-pink-500 focus:ring-pink-500" value={name} onChange={e => setName(e.target.value)} required />
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Purse Total (USD)</label>
-                <input type="number" className="w-full rounded-lg border border-gray-300 px-4 py-2" value={purseTotal} onChange={e => setPurseTotal(numOrEmpty(e.target.value))} />
+                <input type="number" className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900" value={purseTotal} onChange={e => setPurseTotal(numOrEmpty(e.target.value))} />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Max Players</label>
-                <input type="number" className="w-full rounded-lg border border-gray-300 px-4 py-2" value={maxPlayers} onChange={e => setMaxPlayers(numOrEmpty(e.target.value))} />
+                <input type="number" className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900" value={maxPlayers} onChange={e => setMaxPlayers(numOrEmpty(e.target.value))} />
               </div>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -125,26 +129,19 @@ export default function NewTeamPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Logo URL (fallback)</label>
-                <input className="w-full rounded-lg border border-gray-300 px-4 py-2" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://..." />
+                <input className="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://..." />
                 <p className="mt-1 text-xs text-gray-500">If an image is uploaded, it will be used instead of this URL.</p>
               </div>
             </div>
-            {(logoPath || logoUrl) && (
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Preview</label>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={resolvedLogoPreview()} alt="Logo preview" className="h-24 object-contain" />
-              </div>
-            )}
             {error && <p className="text-sm text-red-600">{error}</p>}
             <div className="flex items-center gap-3">
-              <button disabled={loading} className="rounded-lg bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-purple-700 disabled:opacity-50">{loading ? 'Saving…' : 'Create Team'}</button>
-              <button type="button" onClick={() => router.back()} className="rounded-lg border border-gray-300 px-6 py-3 text-sm">Cancel</button>
+              <button disabled={loading} className="rounded-full bg-pink-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-pink-700 disabled:opacity-50">{loading ? 'Saving…' : 'Create Team'}</button>
+              <button type="button" onClick={() => router.back()} className="rounded-full border border-gray-600 px-6 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
             </div>
           </form>
         </div>
       </div>
-    </main>
+    </ManagePageLayout>
   );
 }
 
